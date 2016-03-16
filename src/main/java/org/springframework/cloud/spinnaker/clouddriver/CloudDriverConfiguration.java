@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.netflix.spinnaker.clouddriver.WebConfig;
 import com.netflix.spinnaker.clouddriver.cf.config.CloudFoundryConfig;
 import com.netflix.spinnaker.clouddriver.core.CloudDriverConfig;
 import com.netflix.spinnaker.clouddriver.core.services.Front50Service;
@@ -36,7 +35,7 @@ import com.netflix.spinnaker.clouddriver.deploy.config.DeployConfiguration;
  * @author Greg Turnquist
  */
 @Configuration
-@Import({WebConfig.class, CloudDriverConfig.class, DeployConfiguration.class, CloudFoundryConfig.class})
+@Import({CloudDriverConfig.class, DeployConfiguration.class, CloudFoundryConfig.class})
 @EnableAutoConfiguration(exclude = {BatchAutoConfiguration.class, GroovyTemplateAutoConfiguration.class,
 		SecurityAutoConfiguration.class})
 @EnableScheduling
