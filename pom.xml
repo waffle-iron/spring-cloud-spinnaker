@@ -5,7 +5,6 @@
 
 	<artifactId>spring-cloud-spinnaker</artifactId>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
-	<groupId>org.springframework.cloud</groupId>
 	<packaging>jar</packaging>
 
 	<name>spring-cloud-spinnaker</name>
@@ -19,10 +18,139 @@
 	</parent>
 
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
+		<spring-cloud.version>Brixton.BUILD-SNAPSHOT</spring-cloud.version>
+		<clouddriver.version>1.99.0</clouddriver.version>
+		<orca.version>1.87.0</orca.version>
+		<rxjava.version>1.0.16</rxjava.version>
+		<eureka.version>1.3.4</eureka.version>
 	</properties>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.reactivex</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>${rxjava.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.netflix.spinnaker.clouddriver</groupId>
+			<artifactId>clouddriver-core</artifactId>
+			<version>${clouddriver.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.clouddriver</groupId>
+			<artifactId>clouddriver-cf</artifactId>
+			<version>${clouddriver.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.clouddriver</groupId>
+			<artifactId>clouddriver-web</artifactId>
+			<version>${clouddriver.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.netflix.spinnaker.clouddriver</groupId>
+					<artifactId>clouddriver-aws</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.netflix.spinnaker.clouddriver</groupId>
+					<artifactId>clouddriver-azure</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.netflix.spinnaker.clouddriver</groupId>
+					<artifactId>clouddriver-docker</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.netflix.spinnaker.clouddriver</groupId>
+					<artifactId>clouddriver-google</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.netflix.spinnaker.clouddriver</groupId>
+					<artifactId>clouddriver-kubernetes</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.netflix.spinnaker.clouddriver</groupId>
+					<artifactId>clouddriver-titus</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-web</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-applications</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-bakery</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-clouddriver</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-core</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-echo</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-front50</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-igor</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.spinnaker.orca</groupId>
+			<artifactId>orca-eureka</artifactId>
+			<version>${orca.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.netflix.eureka</groupId>
+			<artifactId>eureka-client</artifactId>
+			<version>${eureka.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-batch</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
