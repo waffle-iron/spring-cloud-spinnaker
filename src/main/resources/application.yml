@@ -1,0 +1,28 @@
+deployer:
+  cf:
+    username: greg
+    password: passgreg
+    apiEndpoint: https://api.navy.springapps.io
+    organization: spring-cloud
+    space: production
+    skipSslValidation: true
+
+security:
+  user:
+    name: user
+    password: password
+
+multipart:
+  max-file-size: 100Mb
+  max-request-size: 100Mb
+
+logging:
+  level:
+    reactor:
+      core: DEBUG
+    org:
+      cloudfoundry: DEBUG
+      springframework:
+        web: TRACE
+        cloud:
+          deployer: DEBUG

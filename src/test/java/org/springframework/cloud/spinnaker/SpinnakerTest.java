@@ -16,43 +16,14 @@
 package org.springframework.cloud.spinnaker;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.springframework.boot.test.EnvironmentTestUtils;
-import org.springframework.cloud.spinnaker.clouddriver.EnableCloudDriver;
-import org.springframework.cloud.spinnaker.orca.EnableOrca;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-import com.netflix.spinnaker.orca.clouddriver.OortService;
 
 /**
  * @author Greg Turnquist
  */
 public class SpinnakerTest {
 
-	private static final Logger log = LoggerFactory.getLogger(SpinnakerTest.class);
-
-	private AnnotationConfigApplicationContext context;
-
 	@Test
-	public void enableCloudDriverShouldPullInCloudFoundryBeans() {
-		context = new AnnotationConfigApplicationContext();
-		context.register(SpinnakerApp.class);
-		EnvironmentTestUtils.addEnvironment(context,
-				"cf.enabled:true",
-				"echo.baseUrl:http://echo.example.com",
-				"front50.baseUrl:http://front50.example.com");
-		context.refresh();
-
-		OortService oortService = context.getBean(OortService.class);
-		oortService.getCluster("springagram", "prod", "springagram-production", "serverGroup");
-	}
-
-	@EnableCloudDriver
-	@EnableOrca
-	static class SpinnakerApp {
-
+	public void noop() {
 	}
 
 }
