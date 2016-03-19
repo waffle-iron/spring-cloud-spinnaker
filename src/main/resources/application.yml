@@ -1,12 +1,3 @@
-deployer:
-  cf:
-    username: greg
-    password: passgreg
-    apiEndpoint: https://api.navy.springapps.io
-    organization: spring-cloud
-    space: production
-    skipSslValidation: true
-
 security:
   user:
     name: user

@@ -78,7 +78,7 @@ public class DeployController {
 		return ResponseEntity.ok(new Resource<>(
 			appDeployer.status(module),
 			linkTo(methodOn(DeployController.class).status(module)).withSelfRel(),
-			linkTo(methodOn(DeployController.class).statuses()).withRel("all"))));
+			linkTo(methodOn(DeployController.class).statuses()).withRel("all")));
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/modules/{module}")
