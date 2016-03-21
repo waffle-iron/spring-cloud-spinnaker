@@ -23,6 +23,6 @@ logging:
     org:
       cloudfoundry: DEBUG
       springframework:
-        web: TRACE
+#        web: TRACE
         cloud:
           deployer: DEBUG

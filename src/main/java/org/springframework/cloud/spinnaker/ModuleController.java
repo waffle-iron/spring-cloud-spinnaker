@@ -42,19 +42,21 @@ import org.springframework.web.multipart.MultipartFile;
  * @author Greg Turnquist
  */
 @RestController
-public class ModuleDeployer {
+public class ModuleController {
+
+	public static final String BASE_PATH = "/api";
 
 	private final AppDeployer appDeployer;
 
 	private final SpinnakerConfiguration spinnakerConfiguration;
 
 	@Autowired
-	public ModuleDeployer(AppDeployer appDeployer, SpinnakerConfiguration spinnakerConfiguration) {
+	public ModuleController(AppDeployer appDeployer, SpinnakerConfiguration spinnakerConfiguration) {
 		this.appDeployer = appDeployer;
 		this.spinnakerConfiguration = spinnakerConfiguration;
 	}
 
-	@RequestMapping(method=RequestMethod.GET, value="/modules", produces = MediaTypes.HAL_JSON_VALUE)
+	@RequestMapping(method = RequestMethod.GET, value = BASE_PATH + "/modules", produces = MediaTypes.HAL_JSON_VALUE)
 	public ResponseEntity<?> statuses() {
 
 		return ResponseEntity.ok(new Resources<>(
@@ -62,13 +64,13 @@ public class ModuleDeployer {
 				.map(appDeployer::status)
 				.map(appStatus -> new Resource<>(
 					appStatus,
-					linkTo(methodOn(ModuleDeployer.class).status(appStatus.getDeploymentId())).withSelfRel()))
+					linkTo(methodOn(ModuleController.class).status(appStatus.getDeploymentId())).withSelfRel()))
 				.collect(Collectors.toList()),
-			linkTo(methodOn(ModuleDeployer.class).statuses()).withSelfRel()
+			linkTo(methodOn(ModuleController.class).statuses()).withSelfRel()
 		));
 	}
 
-	@RequestMapping(method=RequestMethod.GET, value="/modules/{module}", produces = MediaTypes.HAL_JSON_VALUE)
+	@RequestMapping(method = RequestMethod.GET, value = BASE_PATH + "/modules/{module}", produces = MediaTypes.HAL_JSON_VALUE)
 	public ResponseEntity<?> status(@PathVariable String module) {
 
 		if (!spinnakerConfiguration.getModules().contains(module)) {
@@ -77,11 +79,13 @@ public class ModuleDeployer {
 
 		return ResponseEntity.ok(new Resource<>(
 			appDeployer.status(module),
-			linkTo(methodOn(ModuleDeployer.class).status(module)).withSelfRel(),
-			linkTo(methodOn(ModuleDeployer.class).statuses()).withRel("all")));
+			linkTo(methodOn(ModuleController.class).status(module)).withSelfRel(),
+			linkTo(methodOn(ModuleController.class).statuses()).withRel("all"),
+			linkTo(methodOn(ApiController.class).root()).withRel("root")
+		));
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/modules/{module}")
+	@RequestMapping(method = RequestMethod.POST, value = BASE_PATH + "/modules/{module}")
 	public ResponseEntity<?> deploy(@PathVariable String module, @RequestPart("file") MultipartFile file) throws IOException, URISyntaxException {
 
 		if (!file.isEmpty()) {
@@ -91,10 +95,10 @@ public class ModuleDeployer {
 				new InputStreamResource(file.getInputStream())));
 		}
 
-		return ResponseEntity.created(linkTo(methodOn(ModuleDeployer.class).status(module)).toUri()).build();
+		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();
 	}
 
-	@RequestMapping(method = RequestMethod.DELETE, value = "/modules/{module}")
+	@RequestMapping(method = RequestMethod.DELETE, value = BASE_PATH + "/modules/{module}")
 	public ResponseEntity<?> undeploy(@PathVariable String module) {
 
 		if (!spinnakerConfiguration.getModules().contains(module)) {

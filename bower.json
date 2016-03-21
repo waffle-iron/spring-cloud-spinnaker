@@ -1,0 +1,31 @@
+{
+  "name": "Spring-Cloud-Spinnaker",
+  "version": "1.0.0",
+  "homepage": "https://github.com/spring-cloud/spring-cloud-spinnaker",
+  "authors": [
+    "Greg Turnquist <gturnquist@pivotal.io>"
+  ],
+  "description": "Install Spinnaker components to Cloud Foundy",
+  "keywords": [
+    "rest",
+    "hateoas",
+    "spring",
+    "cloud",
+    "spinnaker"
+  ],
+  "license": "ASL",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "inuit-starter-kit": "^0.2.9",
+    "inuit-widths-responsive": "^0.2.2",
+    "inuit-layout": "^0.3.2",
+    "inuit-tools-widths": "^0.1.4"
+  }
+}
