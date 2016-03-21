@@ -18,7 +18,6 @@ package org.springframework.cloud.spinnaker;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -28,7 +27,6 @@ import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
@@ -84,7 +82,7 @@ public class ModuleDeployer {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/modules/{module}")
-	public ResponseEntity<?> upload(@PathVariable String module, @RequestPart("file") MultipartFile file) throws IOException, URISyntaxException {
+	public ResponseEntity<?> deploy(@PathVariable String module, @RequestPart("file") MultipartFile file) throws IOException, URISyntaxException {
 
 		if (!file.isEmpty()) {
 
@@ -93,11 +91,7 @@ public class ModuleDeployer {
 				new InputStreamResource(file.getInputStream())));
 		}
 
-		final Link link = linkTo(methodOn(ModuleDeployer.class).status(module)).withRel("foo");
-
-		return ResponseEntity
-			.created(new URI(link.getHref()))
-			.body(new Resource<>(status(module), link));
+		return ResponseEntity.created(linkTo(methodOn(ModuleDeployer.class).status(module)).toUri()).build();
 	}
 
 	@RequestMapping(method = RequestMethod.DELETE, value = "/modules/{module}")

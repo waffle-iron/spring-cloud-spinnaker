@@ -1,7 +1,11 @@
 spinnaker:
   modules:
-    - orca
     - clouddriver
+    - echo
+    - front50
+    - gate
+    - igor
+    - orca
 
 security:
   user:
