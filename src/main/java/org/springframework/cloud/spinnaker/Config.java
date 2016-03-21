@@ -22,6 +22,7 @@ import org.cloudfoundry.client.lib.CloudFoundryClient;
 import org.cloudfoundry.client.lib.CloudFoundryOperations;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployProperties;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
@@ -32,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Greg Turnquist
  */
 @Configuration
-@EnableConfigurationProperties(CloudFoundryAppDeployProperties.class)
+@EnableConfigurationProperties({CloudFoundryAppDeployProperties.class, SpinnakerConfiguration.class})
 public class Config {
 
 	@Bean

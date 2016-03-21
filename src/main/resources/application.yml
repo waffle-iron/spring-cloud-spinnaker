@@ -1,3 +1,8 @@
+spinnaker:
+  modules:
+    - orca
+    - clouddriver
+
 security:
   user:
     name: user

@@ -18,16 +18,17 @@ package org.springframework.cloud.spinnaker;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
+import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
@@ -43,46 +44,47 @@ import org.springframework.web.multipart.MultipartFile;
  * @author Greg Turnquist
  */
 @RestController
-public class DeployController {
+public class ModuleDeployer {
 
-	private static final List<String> MODULES = Collections.unmodifiableList(Arrays.asList("clouddriver", "orca"));
+	private final AppDeployer appDeployer;
 
-	private final CloudFoundryAppDeployer appDeployer;
+	private final SpinnakerConfiguration spinnakerConfiguration;
 
 	@Autowired
-	public DeployController(CloudFoundryAppDeployer appDeployer) {
+	public ModuleDeployer(AppDeployer appDeployer, SpinnakerConfiguration spinnakerConfiguration) {
 		this.appDeployer = appDeployer;
+		this.spinnakerConfiguration = spinnakerConfiguration;
 	}
 
 	@RequestMapping(method=RequestMethod.GET, value="/modules", produces = MediaTypes.HAL_JSON_VALUE)
 	public ResponseEntity<?> statuses() {
 
 		return ResponseEntity.ok(new Resources<>(
-			MODULES.stream()
+			spinnakerConfiguration.getModules().stream()
 				.map(appDeployer::status)
 				.map(appStatus -> new Resource<>(
 					appStatus,
-					linkTo(methodOn(DeployController.class).status(appStatus.getDeploymentId())).withSelfRel()))
+					linkTo(methodOn(ModuleDeployer.class).status(appStatus.getDeploymentId())).withSelfRel()))
 				.collect(Collectors.toList()),
-			linkTo(methodOn(DeployController.class).statuses()).withSelfRel()
+			linkTo(methodOn(ModuleDeployer.class).statuses()).withSelfRel()
 		));
 	}
 
 	@RequestMapping(method=RequestMethod.GET, value="/modules/{module}", produces = MediaTypes.HAL_JSON_VALUE)
 	public ResponseEntity<?> status(@PathVariable String module) {
 
-		if (!MODULES.contains(module)) {
+		if (!spinnakerConfiguration.getModules().contains(module)) {
 			throw new IllegalArgumentException("Module '" + module + "' is not managed by this system");
 		}
 
 		return ResponseEntity.ok(new Resource<>(
 			appDeployer.status(module),
-			linkTo(methodOn(DeployController.class).status(module)).withSelfRel(),
-			linkTo(methodOn(DeployController.class).statuses()).withRel("all")));
+			linkTo(methodOn(ModuleDeployer.class).status(module)).withSelfRel(),
+			linkTo(methodOn(ModuleDeployer.class).statuses()).withRel("all")));
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/modules/{module}")
-	public ResponseEntity<?> upload(@PathVariable String module, @RequestPart("file") MultipartFile file) throws IOException {
+	public ResponseEntity<?> upload(@PathVariable String module, @RequestPart("file") MultipartFile file) throws IOException, URISyntaxException {
 
 		if (!file.isEmpty()) {
 
@@ -91,7 +93,23 @@ public class DeployController {
 				new InputStreamResource(file.getInputStream())));
 		}
 
-		return ResponseEntity.created(linkTo(methodOn(DeployController.class).status(module)).toUri()).build();
+		final Link link = linkTo(methodOn(ModuleDeployer.class).status(module)).withRel("foo");
+
+		return ResponseEntity
+			.created(new URI(link.getHref()))
+			.body(new Resource<>(status(module), link));
+	}
+
+	@RequestMapping(method = RequestMethod.DELETE, value = "/modules/{module}")
+	public ResponseEntity<?> undeploy(@PathVariable String module) {
+
+		if (!spinnakerConfiguration.getModules().contains(module)) {
+			throw new IllegalArgumentException("Module '" + module + "' is not managed by this system");
+		}
+
+		appDeployer.undeploy(module);
+
+		return ResponseEntity.noContent().build();
 	}
 
 }
