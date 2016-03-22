@@ -17,16 +17,17 @@ package org.springframework.cloud.spinnaker;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
@@ -34,15 +35,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author Greg Turnquist
  */
 @RestController
 public class ModuleController {
+
+	private static final Logger log = LoggerFactory.getLogger(ModuleController.class);
 
 	public static final String BASE_PATH = "/api";
 
@@ -86,14 +87,16 @@ public class ModuleController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = BASE_PATH + "/modules/{module}")
-	public ResponseEntity<?> deploy(@PathVariable String module, @RequestPart("file") MultipartFile file) throws IOException, URISyntaxException {
+	public ResponseEntity<?> deploy(@PathVariable String module) {
 
-		if (!file.isEmpty()) {
-
-			appDeployer.deploy(new AppDeploymentRequest(
-				new AppDefinition(module, Collections.emptyMap()),
-				new InputStreamResource(file.getInputStream())));
+		if (!spinnakerConfiguration.getModules().contains(module)) {
+			throw new IllegalArgumentException("Module '" + module + "' is not managed by this system");
 		}
+
+		appDeployer.deploy(new AppDeploymentRequest(
+			new AppDefinition(module, Collections.emptyMap()),
+			new FileSystemResource("/tmp/" + module + ".jar")
+		));
 
 		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();
 	}

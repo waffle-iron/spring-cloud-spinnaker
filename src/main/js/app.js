@@ -17,6 +17,7 @@ class App extends React.Component {
 		this.state = {modules: {}} // TODO: Split up state between each module
 		this.findModules = this.findModules.bind(this)
 		this.refresh = this.refresh.bind(this)
+		this.deploy = this.deploy.bind(this)
 		this.undeploy = this.undeploy.bind(this)
 	}
 
@@ -37,6 +38,12 @@ class App extends React.Component {
 		})
 	}
 
+	deploy(moduleDetails) {
+		client({method: 'POST', path: moduleDetails._links.self.href}).done(success => {
+			this.refresh(moduleDetails)
+		})
+	}
+
 	undeploy(moduleDetails) {
 		client({method: 'DELETE', path: moduleDetails._links.self.href}).done(success => {
 			this.refresh(moduleDetails)
@@ -54,6 +61,7 @@ class App extends React.Component {
 			<Module key={name}
 					details={this.state.modules[name]}
 					refresh={this.refresh}
+					deploy={this.deploy}
 					undeploy={this.undeploy} />)
 
 		return (

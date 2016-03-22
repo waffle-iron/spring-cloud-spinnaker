@@ -128,7 +128,7 @@
 							<source>
 								<directory>${basedir}/src/main/css</directory>
 							</source>
-							<destination>${basedir}/target/classes/static</destination>
+							<destination>${basedir}/src/main/resources/static/built</destination>
 						</resource>
 					</resources>
 				</configuration>
