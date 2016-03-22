@@ -62,6 +62,10 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
 				<groupId>com.github.eirslett</groupId>
 				<artifactId>frontend-maven-plugin</artifactId>
 				<version>0.0.28</version>
@@ -124,7 +128,7 @@
 							<source>
 								<directory>${basedir}/src/main/css</directory>
 							</source>
-							<destination>${basedir}/src/main/resources/static</destination>
+							<destination>${basedir}/target/classes/static</destination>
 						</resource>
 					</resources>
 				</configuration>

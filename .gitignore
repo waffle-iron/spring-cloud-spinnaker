@@ -26,6 +26,7 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 
+src/main/resources/static/built/*
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
@@ -144,3 +145,4 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+
