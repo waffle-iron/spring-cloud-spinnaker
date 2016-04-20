@@ -93,9 +93,13 @@ public class ModuleController {
 			throw new IllegalArgumentException("Module '" + module + "' is not managed by this system");
 		}
 
+		final FileSystemResource resource = new FileSystemResource(module + "/**/" + module + "*.jar");
+
+		log.info(resource.getFilename());
+
 		appDeployer.deploy(new AppDeploymentRequest(
 			new AppDefinition(module, Collections.emptyMap()),
-			new FileSystemResource("/tmp/" + module + ".jar")
+			resource
 		));
 
 		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();

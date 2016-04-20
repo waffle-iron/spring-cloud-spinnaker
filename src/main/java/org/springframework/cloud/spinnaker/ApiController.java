@@ -34,6 +34,8 @@ public class ApiController {
 	public ResponseEntity<?> root() {
 
 		ResourceSupport root = new ResourceSupport();
+
+		root.add(linkTo(methodOn(ApiController.class).root()).withSelfRel());
 		root.add(linkTo(methodOn(ModuleController.class).statuses()).withRel("modules"));
 
 		return ResponseEntity.ok(root);

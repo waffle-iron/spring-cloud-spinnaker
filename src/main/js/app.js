@@ -23,7 +23,7 @@ class App extends React.Component {
 
 	findModules() {
 		follow(client, root, ['modules']).done(response => {
-			this.setState({modules: response.entity._embedded.appStatusList.reduce((prev, curr) => {
+			this.setState({modules: response.entity._embedded.appStatuses.reduce((prev, curr) => {
 				prev[curr.deploymentId] = curr
 				return prev
 			}, {})})
