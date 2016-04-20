@@ -1,0 +1,18 @@
+[submodule "clouddriver"]
+	path = clouddriver
+	url = https://github.com/spinnaker/clouddriver.git
+[submodule "front50"]
+	path = front50
+	url = https://github.com/spinnaker/front50.git
+[submodule "echo"]
+	path = echo
+	url = https://github.com/spinnaker/echo.git
+[submodule "gate"]
+	path = gate
+	url = https://github.com/spinnaker/gate.git
+[submodule "orca"]
+	path = orca
+	url = https://github.com/spinnaker/orca.git
+[submodule "igor"]
+	path = igor
+	url = https://github.com/spinnaker/igor.git
