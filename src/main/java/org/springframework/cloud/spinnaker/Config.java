@@ -15,12 +15,8 @@
  */
 package org.springframework.cloud.spinnaker;
 
-import org.cloudfoundry.operations.CloudFoundryOperations;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryDeployerProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -29,11 +25,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({CloudFoundryDeployerProperties.class, SpinnakerConfiguration.class})
 public class Config {
-
-	@Bean
-	public CloudFoundryAppDeployer cloudFoundryAppDeployer(CloudFoundryDeployerProperties properties,
-														   CloudFoundryOperations operations) {
-		return new CloudFoundryAppDeployer(properties, operations);
-	}
 
 }

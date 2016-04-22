@@ -15,30 +15,36 @@
  */
 package org.springframework.cloud.spinnaker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 /**
  * @author Greg Turnquist
  */
-@ConfigurationProperties(prefix = "spinnaker")
-public class SpinnakerConfiguration {
+public class ModuleDetails {
 
-	List<ModuleDetails> modules;
-
+	String name;
+	String artifact;
 	Map<String, String> properties = new HashMap<>();
-
 	Map<String, String> patterns = new HashMap<>();
+	List<String> services = new ArrayList<>();
 
-	public List<ModuleDetails> getModules() {
-		return modules;
+	public String getName() {
+		return name;
 	}
 
-	public void setModules(List<ModuleDetails> modules) {
-		this.modules = modules;
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getArtifact() {
+		return artifact;
+	}
+
+	public void setArtifact(String artifact) {
+		this.artifact = artifact;
 	}
 
 	public Map<String, String> getProperties() {
@@ -55,5 +61,13 @@ public class SpinnakerConfiguration {
 
 	public void setPatterns(Map<String, String> patterns) {
 		this.patterns = patterns;
+	}
+
+	public List<String> getServices() {
+		return services;
+	}
+
+	public void setServices(List<String> services) {
+		this.services = services;
 	}
 }
