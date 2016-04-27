@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
-import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.context.ApplicationContext;
@@ -37,7 +36,6 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -125,7 +123,7 @@ public class ModuleController {
 			(a, b) -> b));
 
 		final Map<String, String> environmentProperties = new HashMap<>();
-		environmentProperties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, StringUtils.collectionToCommaDelimitedString(details.getServices()));
+//		environmentProperties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, StringUtils.collectionToCommaDelimitedString(details.getServices()));
 		environmentProperties.put(AppDeployer.GROUP_PROPERTY_KEY, "default");
 
 		appDeployer.deploy(new AppDeploymentRequest(

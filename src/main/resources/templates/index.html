@@ -18,11 +18,67 @@
         </div>
     </nav>
 
-    <section class="box box--tiny">
-        <div id="app" />
+    <header class="page-header">
+        <h1>Deploy Spinnaker</h1>
+    </header>
+
+    <section class="page-header box box--tiny">
+        <ul class="tabs">
+            <li class="tabs__item active">
+                <a id="settings-link" class="tabs__link">Settings</a>
+            </li>
+            <li class="tabs__item">
+                <a id="status-link" class="tabs__link">Status</a>
+            </li>
+        </ul>
+    </section>
+
+    <section class="box box--tiny content__container">
+        <div id="settings" class="content wrapper active">
+            <h1>Spinnaker Settings</h1>
+        </div>
+
+        <div id="status" class="content wrapper">
+            <h1>Spinnaker Status</h1>
+            <div id="app" />
+        </div>
     </section>
 
     <script src="built/bundle.js"></script>
+
+    <script>
+        /**
+         * A little JavaScript to enable toggling
+         */
+        (function() { // Wrapped in an IIFE to avoid global collisions
+
+            var statusElem = document.getElementById('status');
+            var statusLink = document.getElementById('status-link');
+
+            var settings = document.getElementById('settings');
+            var settingsLink = document.getElementById('settings-link');
+
+            if (statusLink) {
+
+                statusLink.onclick = function () {
+                    settingsLink.parentNode.classList.remove('active');
+                    settings.classList.remove('active');
+
+                    statusLink.parentNode.classList.add('active');
+                    statusElem.classList.add('active');
+                };
+
+                settingsLink.onclick = function () {
+                    statusElem.classList.remove('active');
+                    statusLink.parentNode.classList.remove('active');
+
+                    settings.classList.add('active');
+                    settingsLink.parentNode.classList.add('active');
+                };
+            }
+            ;
+        })();
+    </script>
 
 </body>
 </html>

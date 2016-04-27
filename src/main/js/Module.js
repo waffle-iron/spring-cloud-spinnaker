@@ -26,15 +26,12 @@ class Module extends React.Component {
 	}
 
 	render() {
-		let bits = ['deploymentId', 'state'].map(name => {
-			return <td key={name}>{this.props.details[name]}</td>
-		})
-
 		// TODO: Disable Refresh button in the midst of a refresh operation
 
 		return (
 			<tr>
-				{bits}
+				<td key="deploymentId" className="row-title">{this.props.details['deploymentId']}</td>
+				<td key="state">{this.props.details['state']}</td>
 				<td><button onClick={this.handleRefresh}>Refresh</button></td>
 				<td><button onClick={this.handleDeploy}>Deploy</button></td>
 				<td><button onClick={this.handleUndeploy}>Undeploy</button></td>

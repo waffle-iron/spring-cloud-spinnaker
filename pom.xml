@@ -20,7 +20,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-		<spring-cloud-cloudfoundry-deployer.version>1.0.0.BUILD-SNAPSHOT</spring-cloud-cloudfoundry-deployer.version>
+		<spring-cloud-deployer-cloudfoundry.version>1.0.0.BUILD-SNAPSHOT</spring-cloud-deployer-cloudfoundry.version>
 		<reactor.version>2.5.0.BUILD-SNAPSHOT</reactor.version>
 	</properties>
 
@@ -49,8 +49,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-cloudfoundry-deployer</artifactId>
-			<version>${spring-cloud-cloudfoundry-deployer.version}</version>
+			<artifactId>spring-cloud-deployer-cloudfoundry</artifactId>
+			<version>${spring-cloud-deployer-cloudfoundry.version}</version>
 		</dependency>
 
 		<dependency>

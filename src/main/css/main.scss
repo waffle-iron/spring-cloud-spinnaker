@@ -52,11 +52,39 @@ $inuit-enable-table--rows: true;
 $inuit-enable-table--cosy: true;
 @import "../../../bower_components/inuit-tables/objects.tables";
 
+@import "../../../bower_components/inuit-tabs/objects.tabs";
+.#{$inuit-tabs-namespace}tabs {
+  width: unset;
+
+  .#{$inuit-tabs-namespace}tabs__item {
+    border-radius: 5px 5px 0 0;;
+    padding: 8.33333px 12.5px;
+    margin-right: 4px;
+    background: $gray-5;
+    color: $spring-bright-white;
+  }
+
+  .#{$inuit-tabs-namespace}tabs__item:hover, .#{$inuit-tabs-namespace}tabs__item.active {
+    background: $gray-10;
+    color: $green-3;
+    box-shadow: none;
+  }
+
+  .#{$inuit-tabs-namespace}tabs__item a, .#{$inuit-tabs-namespace}tabs__item.active a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+}
+
+
+
 @import "../../../bower_components/inuit-widths/trumps.widths";
 @import "../../../bower_components/inuit-widths-responsive/trumps.widths-responsive";
 
 html {
-  font-family: "source_sans_prolight";
+  font-family: "source_sans_proregular", "helvetica neue", "helvetica", "sans-serif";
+  background-color: $gray-7;
 }
 
 // Dress up the top row of a "page"
@@ -68,6 +96,9 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
   width: 100%;
   margin-top: 0em;
   padding-bottom: $inuit-base-spacing-unit--tiny;
+}
+
+.page-header {
 }
 
 // Wrap a given block with insets so it isn't pushed to the edge of the browser
@@ -98,11 +129,40 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
   top: 32px;
 }
 
+.content__container {
+  margin: 0;
+  position: relative;
+  height: 500px;
+  background: $gray-10;
+}
+
+.content {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.content.active {
+  opacity: 1;
+  background: $gray-10;
+}
+
 // Fine tune the bar at the top, so it shrinks vertically on portable devices
 h1 {
   @include media-query(portable) {
     margin: 0.1em 0;
   }
+  font-weight: normal;
+}
+
+table {
+  border-color: grey;
+}
+
+.table td.row-title {
+  min-width: 150px;
+  color: $green-3;
+
 }
 
 // Add striping to odd rows of a table (not header)
