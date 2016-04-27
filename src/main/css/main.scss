@@ -55,13 +55,16 @@ $inuit-enable-table--cosy: true;
 @import "../../../bower_components/inuit-widths/trumps.widths";
 @import "../../../bower_components/inuit-widths-responsive/trumps.widths-responsive";
 
+html {
+  font-family: "source_sans_prolight";
+}
+
 // Dress up the top row of a "page"
 // Add a small amount of padding at the bottom of a "page"
 $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
 .page {
-  border-top: $brand-color solid 4px;
   color: $brand-highlight;
-  background-color: $brand-lowlight;
+  background-color: $navy-1;
   width: 100%;
   margin-top: 0em;
   padding-bottom: $inuit-base-spacing-unit--tiny;
@@ -73,6 +76,26 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
   margin: 0 auto;
   padding-left: 12px;
   padding-right: 12px;
+}
+
+.logo .pivotal-logo {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  margin: 15px;
+  background-image: url("/logo-pivotal.png");
+  background-repeat: no-repeat;
+  background-color: $green-3;
+  background-size: 50%;
+  background-position: 50% 50%;
+}
+
+.logo .spinnaker-deployer-logo {
+  position: absolute;
+  display: inline-block;
+  height: 19px;
+  left: 80px;
+  top: 32px;
 }
 
 // Fine tune the bar at the top, so it shrinks vertically on portable devices
