@@ -15,19 +15,23 @@
  */
 package org.springframework.cloud.spinnaker;
 
-import static java.util.stream.Stream.*;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import static java.util.stream.Stream.concat;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static org.springframework.util.StringUtils.collectionToCommaDelimitedString;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
+import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.context.ApplicationContext;
@@ -86,7 +90,7 @@ public class ModuleController {
 		ModuleDetails details = getModuleDetails(module);
 
 		return ResponseEntity.ok(new Resource<>(
-			appDeployer.status("default-" + details.getName()),
+			appDeployer.status(details.getName()),
 			linkTo(methodOn(ModuleController.class).status(module)).withSelfRel(),
 			linkTo(methodOn(ModuleController.class).statuses()).withRel("all"),
 			linkTo(methodOn(ApiController.class).root()).withRel("root")
@@ -110,29 +114,41 @@ public class ModuleController {
 			details.getProperties().entrySet().stream()
 		).collect(Collectors.toMap(
 			Map.Entry::getKey,
-			e -> concat(
-				spinnakerConfiguration.getPatterns().entrySet().stream(),
-				details.getPatterns().entrySet().stream())
-				.reduce(e, (accumEntry, patternEntry) -> {
-					String newValue = accumEntry.getValue().replace("{" + patternEntry.getKey() + "}", patternEntry.getValue());
-					accumEntry.setValue(newValue);
-					return accumEntry;
-				})
-				.getValue()
-				.replace("{module}", details.getName()),
+			e -> translateTemplatedValue(details, e),
 			(a, b) -> b));
 
-		final Map<String, String> environmentProperties = new HashMap<>();
-//		environmentProperties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, StringUtils.collectionToCommaDelimitedString(details.getServices()));
-		environmentProperties.put(AppDeployer.GROUP_PROPERTY_KEY, "default");
+		properties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, collectionToCommaDelimitedString(details.getServices()));
 
 		appDeployer.deploy(new AppDeploymentRequest(
-			new AppDefinition(module, properties),
+			new AppDefinition(module, Collections.emptyMap()),
 			resources[0],
-			environmentProperties
+			properties
 		));
 
 		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();
+	}
+
+	private String translateTemplatedValue(ModuleDetails details, Map.Entry<String, String> e) {
+		return concat(spinnakerConfiguration.getPatterns().entrySet().stream(), details.getPatterns().entrySet().stream())
+			.reduce(e, (accumEntry, patternEntry) -> {
+				String newValue = accumEntry.getValue().replace("{" + patternEntry.getKey() + "}", patternEntry.getValue());
+				accumEntry.setValue(newValue);
+				return accumEntry;
+			})
+			.getValue()
+			.replace("{module}", details.getName());
+	}
+
+	private static <T> Stream<T> append(Stream<? extends T> stream, T element) {
+		return concat(stream, Stream.of(element));
+	}
+
+	private static <T> Stream<T> append(Stream<? extends T> stream, T element1, T element2) {
+		return append(append(stream, element1), element2);
+	}
+
+	private static <T> Stream<T> append(Stream<? extends T> stream, T element1, T element2, T element3) {
+		return append(append(append(stream, element1), element2), element3);
 	}
 
 	@RequestMapping(method = RequestMethod.DELETE, value = BASE_PATH + "/modules/{module}")
@@ -142,7 +158,7 @@ public class ModuleController {
 
 		log.debug("Deleting " + details.getName() + " on the server...");
 
-		appDeployer.undeploy("default-" + details.getName());
+		appDeployer.undeploy(details.getName());
 
 		return ResponseEntity.noContent().build();
 	}

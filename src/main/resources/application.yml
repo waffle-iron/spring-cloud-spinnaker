@@ -1,11 +1,37 @@
 spinnaker:
   modules:
-    - clouddriver
-    - echo
-    - front50
-    - gate
-    - igor
-    - orca
+    - name: clouddriver
+      artifact: clouddriver-web
+      properties:
+        cf.account.name: gturnquist
+        cf.account.password: supersecret
+        cf.repo.username: AKIAJ43FGRZSUPOS7LEQ
+        cf.repo.password: X4EHCkL6HDKaQKBE6H6Nb3RRB6MsP5IWYW+mR5/G
+#      patterns:
+#        foo: bar
+      services:
+        - spinnaker-redis
+    - name: echo
+      artifact: echo-web
+    - name: front50
+      artifact: front50-web
+      services:
+        - spinnaker-redis
+    - name: gate
+      artifact: gate-web
+      services:
+        - spinnaker-redis
+    - name: igor
+      artifact: igor-web
+    - name: orca
+      artifact: orca-web
+      services:
+        - spinnaker-redis
+  properties:
+    spring.config.location: https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker-local.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}-local.yml
+  patterns:
+    org: gregturn
+    label: white
 
 security:
   user:
@@ -18,6 +44,7 @@ multipart:
 
 logging:
   level:
+    cloudfoundry-client: DEBUG
     reactor:
       core: DEBUG
     org:
@@ -26,3 +53,4 @@ logging:
 #        web: TRACE
         cloud:
           deployer: DEBUG
+          spinnaker: DEBUG
