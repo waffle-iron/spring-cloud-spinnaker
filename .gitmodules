@@ -16,3 +16,6 @@
 [submodule "igor"]
 	path = igor
 	url = https://github.com/spinnaker/igor.git
+[submodule "deck"]
+	path = deck
+	url = https://github.com/spinnaker/deck.git
