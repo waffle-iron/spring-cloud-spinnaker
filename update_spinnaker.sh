@@ -12,6 +12,7 @@ update() {
 }
 
 update clouddriver
+update deck
 update echo
 update front50
 update gate
