@@ -21,7 +21,7 @@ class Settings extends React.Component {
 				<ul>
 					<li>
 						<label>Redis Service</label>
-						<input type="text" name="spinnaker-redis" onChange={this.handleChange} />
+						<input type="text" name="spring.cloud.deployer.cloudfoundry.defaults.services" onChange={this.handleChange} />
 					</li>
 					<li>
 						<label>Account Name</label>

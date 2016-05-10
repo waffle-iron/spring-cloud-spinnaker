@@ -10,7 +10,14 @@ class Application extends React.Component {
 
 	constructor(props) {
 		super(props)
-		this.state = {}
+		this.state = {
+			services: 'spring.cloud.deployer.cloudfoundry.defaults.services',
+			accountName: 'cf.account.name',
+			accountPassword: 'cf.account.password',
+			repoUsername: 'cf.repo.username',
+			repoPassword: 'cf.repo.password',
+			springConfigLocation: 'spring.config.location'
+		}
 		this.updateSetting = this.updateSetting.bind(this)
 	}
 
@@ -18,7 +25,6 @@ class Application extends React.Component {
 		let newState = {}
 		newState[key] = value
 		this.setState(newState)
-		console.log(this.state);
 	}
 
 	render() {

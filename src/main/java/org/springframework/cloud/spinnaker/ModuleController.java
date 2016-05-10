@@ -41,6 +41,7 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -98,7 +99,7 @@ public class ModuleController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = BASE_PATH + "/modules/{module}")
-	public ResponseEntity<?> deploy(@PathVariable String module) throws IOException {
+	public ResponseEntity<?> deploy(@PathVariable String module, @RequestBody Map<String, String> data) throws IOException {
 
 		ModuleDetails details = getModuleDetails(module);
 
@@ -106,6 +107,8 @@ public class ModuleController {
 			"file:" + details.getName() + "/**/build/libs/" + details.getArtifact() + "-*.jar");
 
 		Assert.state(resources.length == 1, "Number of resources MUST be 1");
+
+		log.info("Need to also chew on " + data);
 
 		log.debug("Uploading " + resources[0].getURL() + "...");
 
@@ -118,6 +121,9 @@ public class ModuleController {
 			(a, b) -> b));
 
 		properties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, collectionToCommaDelimitedString(details.getServices()));
+
+		data.entrySet().stream()
+			.forEach(entry -> properties.put(entry.getKey(), entry.getValue()));
 
 		appDeployer.deploy(new AppDeploymentRequest(
 			new AppDefinition(module, Collections.emptyMap()),
