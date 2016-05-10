@@ -1,6 +1,7 @@
 'use strict'
 
 const React = require('react')
+const ReactDOM = require('react-dom')
 
 const client = require('./client')
 const when = require('when')
@@ -19,6 +20,9 @@ class Modules extends React.Component {
 		this.refresh = this.refresh.bind(this)
 		this.deploy = this.deploy.bind(this)
 		this.undeploy = this.undeploy.bind(this)
+		this.handleRefreshAll = this.handleRefreshAll.bind(this)
+		this.handleDeployAll = this.handleDeployAll.bind(this)
+		this.handleUndeployAll = this.handleUndeployAll.bind(this)
 	}
 
 	findModules() {
@@ -39,6 +43,10 @@ class Modules extends React.Component {
 	}
 
 	deploy(moduleDetails) {
+		console.log(this.props.settings)
+		console.log(this.props.settings['spinnaker-redis'])
+		// TODO: Add optional arguments based on module, like redis.
+		console.log('Deploying ' + moduleDetails._links.self.href + ', bound to ' + this.props.settings['spinnaker-redis'])
 		client({method: 'POST', path: moduleDetails._links.self.href}).done(success => {
 			this.refresh(moduleDetails)
 		})
@@ -49,6 +57,27 @@ class Modules extends React.Component {
 			this.refresh(moduleDetails)
 		}, failure => {
 			alert('FAILURE: ' + failure.entity.message)
+		})
+	}
+
+	handleRefreshAll(e) {
+		e.preventDefault()
+		Object.keys(this.state.modules).map(key => {
+			this.refresh(this.state.modules[key])
+		})
+	}
+
+	handleDeployAll(e) {
+		e.preventDefault()
+		Object.keys(this.state.modules).map(key => {
+			this.deploy(this.state.modules[key])
+		})
+	}
+
+	handleUndeployAll(e) {
+		e.preventDefault()
+		Object.keys(this.state.modules).map(key => {
+			this.undeploy(this.state.modules[key])
 		})
 	}
 
@@ -68,6 +97,12 @@ class Modules extends React.Component {
 			<table className="table table--cosy table--rows">
 				<tbody>
 				{modules}
+				<tr>
+					<td></td><td></td>
+					<td><button onClick={this.handleRefreshAll}>Refresh All</button></td>
+					<td><button onClick={this.handleDeployAll}>Deploy All</button></td>
+					<td><button onClick={this.handleUndeployAll}>Undeploy All</button></td>
+				</tr>
 				</tbody>
 			</table>
 		)
