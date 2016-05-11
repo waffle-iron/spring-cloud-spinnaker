@@ -44,18 +44,24 @@ class Modules extends React.Component {
 
 	deploy(moduleDetails) {
 		let data = {}
+
 		if (['clouddriver', 'front50', 'gate', 'orca'].find(m => m === moduleDetails.deploymentId) !== undefined) {
 			if ([undefined, ''].find(i => i === this.props.settings[this.props.settings.services]) === undefined) { // if not empty
 				data[this.props.settings.services] = this.props.settings[this.props.settings.services]
 			}
 		}
+
 		if (moduleDetails.deploymentId === 'clouddriver') {
 			data[this.props.settings.accountName] = this.props.settings[this.props.settings.accountName]
 			data[this.props.settings.accountPassword] = this.props.settings[this.props.settings.accountPassword]
 			data[this.props.settings.repoUsername] = this.props.settings[this.props.settings.repoUsername]
 			data[this.props.settings.repoPassword] = this.props.settings[this.props.settings.repoPassword]
 		}
-		data[this.props.settings.springConfigLocation] = this.props.settings[this.props.settings.springConfigLocation]
+
+		if (moduleDetails.deploymentId !== 'deck') {
+			data[this.props.settings.springConfigLocation] = this.props.settings[this.props.settings.springConfigLocation]
+		}
+
 		client({
 			method: 'POST',
 			path: moduleDetails._links.self.href,

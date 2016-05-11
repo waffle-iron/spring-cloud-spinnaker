@@ -18,20 +18,24 @@ package org.springframework.cloud.spinnaker;
 import static java.util.stream.Stream.concat;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-import static org.springframework.util.StringUtils.collectionToCommaDelimitedString;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
+import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryDeployerProperties;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.context.ApplicationContext;
@@ -56,16 +60,27 @@ public class ModuleController {
 
 	public static final String BASE_PATH = "/api";
 
-	private final AppDeployer appDeployer;
+	private final CloudFoundryAppDeployer appDeployer;
+
+	private final CloudFoundryDeployerProperties cloudFoundryDeployerProperties;
+
+	private final CloudFoundryOperations operations;
+
+	private final CloudFoundryClient client;
 
 	private final SpinnakerConfiguration spinnakerConfiguration;
 
 	private final ApplicationContext ctx;
 
-	@Autowired
-	public ModuleController(AppDeployer appDeployer, SpinnakerConfiguration spinnakerConfiguration, ApplicationContext ctx) {
 
-		this.appDeployer = appDeployer;
+	@Autowired
+	public ModuleController(CloudFoundryDeployerProperties cloudFoundryDeployerProperties, CloudFoundryOperations operations,
+							CloudFoundryClient client, SpinnakerConfiguration spinnakerConfiguration, ApplicationContext ctx) {
+
+		this.appDeployer = new CloudFoundryAppDeployer(cloudFoundryDeployerProperties, operations, client);
+		this.cloudFoundryDeployerProperties = cloudFoundryDeployerProperties;
+		this.operations = operations;
+		this.client = client;
 		this.spinnakerConfiguration = spinnakerConfiguration;
 		this.ctx = ctx;
 	}
@@ -120,10 +135,15 @@ public class ModuleController {
 			e -> translateTemplatedValue(details, e),
 			(a, b) -> b));
 
-		properties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, collectionToCommaDelimitedString(details.getServices()));
+//		properties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, collectionToCommaDelimitedString(details.getServices()));
 
 		data.entrySet().stream()
 			.forEach(entry -> properties.put(entry.getKey(), entry.getValue()));
+
+		AppDeployer appDeployer = Optional.ofNullable(details.getProperties().get("buildpack"))
+				.map(buildpack -> mutateBuildpack(this.cloudFoundryDeployerProperties, buildpack))
+				.map(props -> new CloudFoundryAppDeployer(props, this.operations, this.client))
+				.orElse(this.appDeployer);
 
 		appDeployer.deploy(new AppDeploymentRequest(
 			new AppDefinition(module, Collections.emptyMap()),
@@ -132,6 +152,18 @@ public class ModuleController {
 		));
 
 		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();
+	}
+
+	private static CloudFoundryDeployerProperties cloneDeployerProperties(CloudFoundryDeployerProperties properties) {
+		CloudFoundryDeployerProperties localProps = new CloudFoundryDeployerProperties();
+		BeanUtils.copyProperties(properties, localProps);
+		return localProps;
+	}
+
+	private static CloudFoundryDeployerProperties mutateBuildpack(CloudFoundryDeployerProperties properties, String buildpack) {
+		CloudFoundryDeployerProperties clonedProps = cloneDeployerProperties(properties);
+		clonedProps.setBuildpack(buildpack);
+		return clonedProps;
 	}
 
 	private String translateTemplatedValue(ModuleDetails details, Map.Entry<String, String> e) {

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 
-# Build a module
-build() {
+# push a module over to /tmp
+push() {
 
 	echo "+++ Moving $1 to /tmp..."
 	mv $1 /tmp
@@ -12,11 +12,10 @@ build() {
 
 	echo "+++ Moving over $1's actual .git folder..."
 	mv .git/modules/$1 /tmp/$1/.git
+}
 
-	echo "+++ Building $1..."
-	pushd /tmp/$1
-	./gradlew -DspringBoot.repackage=true clean build
-	popd
+# pop a module back from /tmp
+pop() {
 
 	echo "+++ Moving $1's actual .git folder back..."
 	mv /tmp/$1/.git .git/modules/$1
@@ -28,12 +27,54 @@ build() {
 	mv /tmp/$1 .
 
 }
+# Build a module
+build() {
 
-build clouddriver
-build echo
-build front50
-build gate
-build igor
-build orca
+	push $1
+
+	echo "+++ Building $1..."
+	pushd /tmp/$1
+	./gradlew -DspringBoot.repackage=true clean build
+	popd
+
+	pop $1
+
+}
+
+# Build deck
+buildDeck() {
+
+	push $1
+
+	pushd /tmp/$1
+
+	echo "+++ Backup up $1's .git/config"
+	cp .git/config .git/config.backup
+
+	echo "+++ Filtering out $1's worktree"
+	grep -v worktree .git/config > .git/config.new
+	mv .git/config.new .git/config
+
+	echo "+++ Building $1..."
+	./gradlew -DspringBoot.repackage=true clean build
+	/bin/rm -f build/libs/deck-ui-*.jar
+	jar cvf build/libs/deck-ui-repackaged.jar -C build/webpack/ .
+
+	echo "+++ Restoring $1's .git/config"
+	mv .git/config.backup .git/config
+
+	popd
+
+	pop $1
+}
+
+#build clouddriver
+#build echo
+#build front50
+#build gate
+#build igor
+#build orca
+
+buildDeck deck
 
 

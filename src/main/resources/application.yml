@@ -11,6 +11,10 @@ spinnaker:
 #        foo: bar
       services:
         - spinnaker-redis
+    - name: deck
+      artifact: deck-ui
+      properties:
+        buildpack: staticfile_buildpack
     - name: echo
       artifact: echo-web
     - name: front50

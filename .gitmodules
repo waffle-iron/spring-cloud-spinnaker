@@ -1,21 +1,28 @@
 [submodule "clouddriver"]
 	path = clouddriver
 	url = https://github.com/spinnaker/clouddriver.git
+	ignore = dirty
 [submodule "front50"]
 	path = front50
 	url = https://github.com/spinnaker/front50.git
+	ignore = dirty
 [submodule "echo"]
 	path = echo
 	url = https://github.com/spinnaker/echo.git
+	ignore = dirty
 [submodule "gate"]
 	path = gate
 	url = https://github.com/spinnaker/gate.git
+	ignore = dirty
 [submodule "orca"]
 	path = orca
 	url = https://github.com/spinnaker/orca.git
+	ignore = dirty
 [submodule "igor"]
 	path = igor
 	url = https://github.com/spinnaker/igor.git
+	ignore = dirty
 [submodule "deck"]
 	path = deck
 	url = https://github.com/spinnaker/deck.git
+	ignore = dirty
