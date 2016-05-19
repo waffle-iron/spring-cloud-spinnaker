@@ -1,7 +1,7 @@
 'use strict';
 
 var feedbackUrl = 'http://localhost';
-var gateHost = 'http://localhost:8084'; // TODO: Replace with '{gate}' for templating
+var gateHost = '{gate}';
 var bakeryDetailUrl = process.env.BAKERY_DETAIL_URL || 'http://bakery.test.netflix.net/#/?region={{context.region}}&package={{context.package}}&detail=bake:{{context.status.resourceId}}';
 var authEndpoint = process.env.AUTH_ENDPOINT || 'https://spinnaker-api-prestaging.prod.netflix.net/auth/info';
 
@@ -18,9 +18,10 @@ window.spinnakerSettings = {
   providers: {
     cf: {
       defaults: {
-        account: 'prod',
+        account: '{primaryAccount}',
         region: 'production'
       },
+      primaryAccounts: '{primaryAccounts}'
     },
   },
   whatsNew: {

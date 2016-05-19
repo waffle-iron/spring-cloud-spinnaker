@@ -19,13 +19,11 @@ import static java.util.stream.Stream.concat;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +33,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -57,6 +56,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.util.InMemoryResource;
 import org.springframework.util.Assert;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -186,23 +186,9 @@ public class ModuleController {
 						if (entry.getName().contains("META-INF") || entry.getName().contains("MANIFEST.MF")) {
 							// Skip the manifest since it's set up above.
 						} else if (entry.getName().equals("settings.js")) {
-							final URI uri = ctx.getResource("file:settings.js").getFile().toURI();
-							String settingsJs = new String(Files.readAllBytes(Paths.get(uri)));
-							settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("domain", "cfapps.io"));
-
-							JarEntry newEntry = new JarEntry(entry.getName());
-							newEntry.setTime(entry.getTime());
-							newDeckJarFile.putNextEntry(newEntry);
-							StreamUtils.copy(new ByteArrayInputStream(settingsJs.getBytes()), newDeckJarFile);
-							newDeckJarFile.closeEntry();
+							transformSettingsJs(data, zipFile, newDeckJarFile, entry);
 						} else {
-							JarEntry newEntry = new JarEntry(entry.getName());
-							newEntry.setTime(entry.getTime());
-							newDeckJarFile.putNextEntry(newEntry);
-							if (!entry.isDirectory()) {
-								StreamUtils.copy(zipFile.getInputStream(entry), newDeckJarFile);
-							}
-							newDeckJarFile.closeEntry();
+							passThroughFileEntry(zipFile, newDeckJarFile, entry);
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -221,6 +207,31 @@ public class ModuleController {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static void transformSettingsJs(Map<String, String> data, ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
+		JarEntry newEntry = new JarEntry(entry.getName());
+		newEntry.setTime(entry.getTime());
+		newDeckJarFile.putNextEntry(newEntry);
+		if (!entry.isDirectory()) {
+			String settingsJs = StreamUtils.copyToString(zipFile.getInputStream(entry), Charset.defaultCharset());
+			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("domain", "white.springapps.io"));
+			settingsJs = settingsJs.replace("{primaryAccount}", data.getOrDefault("primaryAccount", "prod"));
+			String defaultPrimaryAccounts = StringUtils.collectionToCommaDelimitedString(Stream.of("prod", "staging", "dev").map(account -> "'" + account + "'").collect(Collectors.toList()));
+			settingsJs = settingsJs.replace("'{primaryAccounts}'", "[" + data.getOrDefault("primaryAccounts", defaultPrimaryAccounts) + "]");
+			StreamUtils.copy(settingsJs, Charset.defaultCharset(), newDeckJarFile);
+		}
+		newDeckJarFile.closeEntry();
+	}
+
+	private static void passThroughFileEntry(ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
+		JarEntry newEntry = new JarEntry(entry.getName());
+		newEntry.setTime(entry.getTime());
+		newDeckJarFile.putNextEntry(newEntry);
+		if (!entry.isDirectory()) {
+			StreamUtils.copy(zipFile.getInputStream(entry), newDeckJarFile);
+		}
+		newDeckJarFile.closeEntry();
 	}
 
 	private static CloudFoundryDeployerProperties cloneDeployerProperties(CloudFoundryDeployerProperties properties) {

@@ -44,6 +44,9 @@ build() {
 # Build deck
 buildDeck() {
 
+	/bin/mv $1/settings.js $1/settings.js.orig
+	/bin/cp settings.js $1/settings.js
+
 	push $1
 
 	pushd /tmp/$1
@@ -56,7 +59,7 @@ buildDeck() {
 	mv .git/config.new .git/config
 
 	echo "+++ Building $1..."
-	./gradlew -DspringBoot.repackage=true clean build
+	./gradlew -DspringBoot.repackage=true clean build -x test
 	/bin/rm -f build/libs/deck-ui-*.jar
 	jar cvf build/libs/deck-ui-repackaged.jar -C build/webpack/ .
 
@@ -66,6 +69,10 @@ buildDeck() {
 	popd
 
 	pop $1
+
+	/bin/rm -f $1/settings.js
+	/bin/mv $1/settings.js.orig $1/settings.js
+
 }
 
 build clouddriver
