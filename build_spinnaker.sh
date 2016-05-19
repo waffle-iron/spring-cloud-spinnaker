@@ -68,12 +68,12 @@ buildDeck() {
 	pop $1
 }
 
-#build clouddriver
-#build echo
-#build front50
-#build gate
-#build igor
-#build orca
+build clouddriver
+build echo
+build front50
+build gate
+build igor
+build orca
 
 buildDeck deck
 

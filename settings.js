@@ -1,52 +1,61 @@
 'use strict';
 
-var feedbackUrl = 'http://hootch.test.netflix.net/submit';
-var gateHost = '{gate}';
-var bakeryDetailUrl = 'http://bakery.test.netflix.net/#/?region={{context.region}}&package={{context.package}}&detail=bake:{{context.status.resourceId}}';
-var authEndpoint = 'https://spinnaker-api-prestaging.prod.netflix.net/auth/info';
+var feedbackUrl = 'http://localhost';
+var gateHost = 'http://localhost:8084'; // TODO: Replace with '{gate}' for templating
+var bakeryDetailUrl = process.env.BAKERY_DETAIL_URL || 'http://bakery.test.netflix.net/#/?region={{context.region}}&package={{context.package}}&detail=bake:{{context.status.resourceId}}';
+var authEndpoint = process.env.AUTH_ENDPOINT || 'https://spinnaker-api-prestaging.prod.netflix.net/auth/info';
 
 window.spinnakerSettings = {
-  defaultProviders: ['aws', 'cf'],
+  checkForUpdates: true,
+  defaultProviders: ['cf'],
   feedbackUrl: feedbackUrl,
   gateUrl: gateHost,
   bakeryDetailUrl: bakeryDetailUrl,
   authEndpoint: authEndpoint,
   pollSchedule: 30000,
   defaultTimeZone: 'America/Los_Angeles', // see http://momentjs.com/timezone/docs/#/data-utilities/
+  defaultCategory: 'serverGroup',
   providers: {
     cf: {
       defaults: {
         account: 'prod',
-        region: 'spinnaker'
+        region: 'production'
       },
-      primaryAccounts: ['prod'],
-      primaryRegions: ['spinnaker'],
-      challengeDestructiveActions: ['prod'],
-      defaultSecurityGroups: [],
-      accountBastions : {
-      },
-      preferredZonesByAccount: {
-        prod: {
-          'spinnaker': ['production']
-        },
-        default: {
-          'spinnaker': ['production']
-        }
-      }
-    }
+    },
   },
   whatsNew: {
     gistId: '32526cd608db3d811b38',
     fileName: 'news.md',
   },
-  authEnabled: 'disabled',
+  notifications: {
+    email: {
+      enabled: true,
+    },
+    hipchat: {
+      enabled: true,
+      botName: 'Skynet T-800'
+    },
+    sms: {
+      enabled: true,
+    },
+    slack: {
+      enabled: true,
+      botName: 'spinnakerbot'
+    }
+  },
+  authEnabled: false,
+  gitSources: ['stash', 'github'],
+  triggerTypes: ['git', 'pipeline', 'docker', 'cron', 'jenkins'],
   feature: {
     pipelines: true,
     notifications: false,
     fastProperty: true,
     vpcMigrator: true,
     clusterDiff: true,
-    rebakeControlEnabled: false,
+    roscoMode: false,
     netflixMode: false,
+    // whether stages affecting infrastructure (like "Create Load Balancer") should be enabled or not
+    infrastructureStages: process.env.INFRA_STAGES === 'enabled',
+    jobs: false,
   },
 };

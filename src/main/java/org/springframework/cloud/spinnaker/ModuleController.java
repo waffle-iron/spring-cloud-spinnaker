@@ -15,19 +15,18 @@
  */
 package org.springframework.cloud.spinnaker;
 
-import static java.nio.file.Files.getLastModifiedTime;
 import static java.util.stream.Stream.concat;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.jar.Attributes;
@@ -36,7 +35,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -52,13 +50,13 @@ import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryDeployerP
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.util.InMemoryResource;
 import org.springframework.util.Assert;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -148,8 +146,6 @@ public class ModuleController {
 			e -> translateTemplatedValue(details, e),
 			(a, b) -> b));
 
-//		properties.put(CloudFoundryAppDeployer.SERVICES_PROPERTY_KEY, collectionToCommaDelimitedString(details.getServices()));
-
 		data.entrySet().stream()
 			.forEach(entry -> properties.put(entry.getKey(), entry.getValue()));
 
@@ -158,11 +154,12 @@ public class ModuleController {
 				.map(props -> new CloudFoundryAppDeployer(props, this.operations, this.client))
 				.orElse(this.appDeployer);
 
-		org.springframework.core.io.Resource artifactToDeploy = Optional.of(details.getName().equals("deck"))
-				.map(deckQ -> pluginSettingsJs(resources[0], data))
-				.orElse(resources[0]);
+		final org.springframework.core.io.Resource artifactToDeploy =
+				(details.getName().equals("deck")
+					? pluginSettingsJs(resources[0], data)
+					: resources[0]);
 
-		log.debug("Uploading " + artifactToDeploy.getURL() + "...");
+		log.debug("Uploading " + artifactToDeploy + "...");
 
 		appDeployer.deploy(new AppDeploymentRequest(
 			new AppDefinition(module, Collections.emptyMap()),
@@ -170,79 +167,57 @@ public class ModuleController {
 			properties
 		));
 
-		artifactToDeploy.getFile().delete();
-
 		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();
 	}
 
 	private org.springframework.core.io.Resource pluginSettingsJs(org.springframework.core.io.Resource originalDeckJarFile, Map<String, String> data) {
 		try {
-			// TODO: Unpack original deck JAR file
-
-			Path path = Files.createTempDirectory("deck");
-
-			try (ZipFile zipFile = new ZipFile(originalDeckJarFile.getFile())) {
-				for (Enumeration<? extends ZipEntry> e = zipFile.entries(); e.hasMoreElements();) {
-					ZipEntry entry = e.nextElement();
-					final Path entryPath = path.resolve(entry.getName());
-					if (entry.isDirectory()) {
-						Files.createDirectory(entryPath);
-					} else {
-						Files.copy(zipFile.getInputStream(entry), entryPath);
-					}
-				}
-			}
-
-			// TODO: Plugin in custom settings.js
-			final URI uri = ctx.getResource("file:settings.js").getFile().toURI();
-			String settingsJs = new String(Files.readAllBytes(Paths.get(uri)));
-			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("domain", "cfapps.io"));
-			Files.write(path.resolve("settings.js"), settingsJs.getBytes());
-
-			// TODO: Repack deck JAR
 			Manifest manifest = new Manifest();
 			manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-			Path newPath = Files.createTempFile("deck-customized-", ".jar");
-			newPath.toFile().deleteOnExit(); // Register extra hook to delete on JVM exit, in case deployment fails
-			try (JarOutputStream newDeckJarFile = new JarOutputStream(new FileOutputStream(newPath.toFile()), manifest)) {
-				add(path, path, newDeckJarFile);
+			final ByteArrayOutputStream jarByteStream = new ByteArrayOutputStream();
+
+			try (
+				ZipFile zipFile = new ZipFile(originalDeckJarFile.getFile());
+				JarOutputStream newDeckJarFile = new JarOutputStream(jarByteStream, manifest)
+			) {
+				zipFile.stream().forEach(entry -> {
+					try {
+
+						if (entry.getName().contains("META-INF") || entry.getName().contains("MANIFEST.MF")) {
+							// Skip the manifest since it's set up above.
+						} else if (entry.getName().equals("settings.js")) {
+							final URI uri = ctx.getResource("file:settings.js").getFile().toURI();
+							String settingsJs = new String(Files.readAllBytes(Paths.get(uri)));
+							settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("domain", "cfapps.io"));
+
+							JarEntry newEntry = new JarEntry(entry.getName());
+							newEntry.setTime(entry.getTime());
+							newDeckJarFile.putNextEntry(newEntry);
+							StreamUtils.copy(new ByteArrayInputStream(settingsJs.getBytes()), newDeckJarFile);
+							newDeckJarFile.closeEntry();
+						} else {
+							JarEntry newEntry = new JarEntry(entry.getName());
+							newEntry.setTime(entry.getTime());
+							newDeckJarFile.putNextEntry(newEntry);
+							if (!entry.isDirectory()) {
+								StreamUtils.copy(zipFile.getInputStream(entry), newDeckJarFile);
+							}
+							newDeckJarFile.closeEntry();
+						}
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				});
 			}
 
-			// TODO: Delete unpacked JAR file
-			FileSystemUtils.deleteRecursively(path.toFile());
-
-			// TODO: Hand back Resource link
-			return new FileSystemResource(newPath.toFile());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private static void add(Path basePath, Path source, JarOutputStream newDeckJarFile) {
-		try {
-			final String name = basePath.relativize(source).toString();
-
-			if (name.startsWith("META-INF")) {
-				return;
+			if (log.isDebugEnabled()) {
+				Path file = Files.createTempFile("deck-preview", ".jar");
+				log.info("Dumping JAR contents to " + file);
+				Files.write(file, jarByteStream.toByteArray());
+				file.toFile().deleteOnExit();
 			}
 
-			if (Files.isDirectory(source)) {
-				// Don't create an entry for the basePath
-				if (!source.equals(basePath)) {
-					JarEntry entry = new JarEntry(name + "/");
-					entry.setTime(getLastModifiedTime(source).toMillis());
-					newDeckJarFile.putNextEntry(entry);
-					newDeckJarFile.closeEntry();
-				}
-				Files.list(source).forEach(nestedPath -> add(basePath, nestedPath, newDeckJarFile));
-				return;
-			} else {
-				JarEntry entry = new JarEntry(name);
-				entry.setTime(getLastModifiedTime(source).toMillis());
-				newDeckJarFile.putNextEntry(entry);
-				Files.copy(source, newDeckJarFile);
-				newDeckJarFile.closeEntry();
-			}
+			return new InMemoryResource(jarByteStream.toByteArray(), "In memory JAR file for deck");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
