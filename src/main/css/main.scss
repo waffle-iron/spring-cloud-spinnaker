@@ -84,7 +84,22 @@ $inuit-enable-table--cosy: true;
 
 html {
   font-family: "source_sans_proregular", "helvetica neue", "helvetica", "sans-serif";
+  font-size: .9em;
   background-color: $gray-7;
+}
+
+label {
+  font-size: 1.2em;
+}
+
+input {
+  padding: 6.25px;
+  border-radius: 3px;
+  border: 1px solid $gray-5;
+}
+
+label, input {
+  vertical-align: middle;
 }
 
 // Dress up the top row of a "page"
@@ -132,7 +147,7 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
 .content__container {
   margin: 0;
   position: relative;
-  height: 500px;
+  height: 1000px;
   background: $gray-10;
 }
 
@@ -145,6 +160,20 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
 .content.active {
   opacity: 1;
   background: $gray-10;
+}
+
+.site-footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: $gray-6;
+  height: 40px;
+  padding: .75em 1em;
+  z-index: 5;
+}
+
+.control-group {
+  padding: 8.5px;
 }
 
 // Fine tune the bar at the top, so it shrinks vertically on portable devices
