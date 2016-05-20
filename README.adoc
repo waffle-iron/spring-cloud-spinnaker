@@ -1,0 +1,94 @@
+= Spring Cloud Spinnaker
+
+Spring Cloud Spinnaker is a Spring Boot web application used to deploy all the parts of http://spinnaker.io[Spinnaker]
+to a pre-selected space in PCF.
+
+== Running Spring Cloud Spinnaker
+
+To run the app locally on your machine, you have to follow a few steps.
+
+Requirements:
+
+* Either a Mac or Unix based system. (Building the Spinnaker components on Windows won't work, and Cygwin has yet to be tested)
+* Java 8 SDK
+* git
+
+=== Building Spinnaker
+
+Before you can run this application, you have to build Spinnaker's modules.
+
+1. Clone this repository
+1. Run `git submodules init`
+1. Run `git submodules update`
+1. Run `./build_spinnaker.sh`
++
+WARNING: Do NOT interrupt `build_spinnaker.sh` in mid process. Due to the nature of Spinnaker's nebula gradle plugin, the
+components cannot be built inside a git submodule. The script temporarily moves each module into /tmp, builds it, then
+moves it back. Any interruptions would require reseting the state of your cloned repository.
+
+=== Targeting your deployment environment
+
+This app uses the Spring Cloud Deployer for Cloud Foundry library. To support it, you need to create a key file:
+
+.`src/main/resources/application-dev.yml`
+[source]
+----
+spring:
+  cloud:
+    deployer:
+      cloudfoundry:
+        username: <your username>
+        password: <your password>
+        organization: <your CF org>
+        space: <your CF space>
+        apiEndpoint: <your API endpoint>
+        domain: <default domain of your CF org>
+        skipSslValidation: true
+----
+
+NOTE: Don't worry! `application-dev.yml` is listed as a file to NOT put under source control inside `.gitignore`.
+
+With `src/main/resources/application-dev.yml` in place, you are now ready to run Spring Cloud Spinnaker.
+
+----
+SPRING_PROFILES_ACTIVE=dev ./mvnw clean spring-boot:run
+----
+
+Visit localhost:8080 and login using the credentials specified in application.yml.
+
+== Deploying Spinnaker
+
+The app is designed to mimic a PCF tile. There is a tab for settings, and another for deploying and undeploying the modules.
+
+Requirements:
+
+* Create a Redis service in your target PCF space
+
+=== Settings
+
+.Settings
+|===
+| Setting | Purpose
+
+| Redis Service
+| Name of the Redis service you created
+
+| Account Name
+| Account name for Spinnaker to use when logging into PCF
+
+| Account Password
+| Account password for Spinnaker to use when logging into PCF
+
+| Repository Name/Access Code
+| If you are pulling deployment artifacts from an http-based repository, put your username. If s3, put your access code
+
+NOTE: If your repository isn't secured, leave blank
+
+| Repository Password/Secret Code
+| If you are pulling deployment artifacts from an http-based repository, put your password. If s3, put your secret code
+
+ NOTE: If your repository isn't secured, leave blank
+
+| Spring Config Location
+| Override path location of your own set of Spinnaker configuration files.
+|===
