@@ -9,7 +9,7 @@ src/main/resources/application-dev.yml
 .mtj.tmp/
 
 # Package Files #
-*.jar
+*/*.jar
 *.war
 *.ear
 
