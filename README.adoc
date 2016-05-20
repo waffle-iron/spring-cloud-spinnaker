@@ -92,3 +92,18 @@ NOTE: If your repository isn't secured, leave blank
 | Spring Config Location
 | Override path location of your own set of Spinnaker configuration files.
 |===
+
+With your settings filled in, click on the Status tab.
+
+=== Deploying
+
+On the Status tab, you have the ability to check each module, or deal with them all.
+
+1. Click on *Deploy All*.
+1. Sit back and sip on a cup of coffee. This will take some time.
+
+== Next Steps
+
+After getting Spinnaker up and running, you should be able to access deck, the UI for Spinnaker, by visiting
+https://deck.<your domain>
+
