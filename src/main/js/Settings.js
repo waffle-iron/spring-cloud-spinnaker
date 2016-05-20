@@ -16,32 +16,34 @@ class Settings extends React.Component {
 	}
 
 	render() {
+		let labelLayout = 'layout__item u-1/2-lap-and-up u-1/4-desk'
+		let inputLayout = 'layout__item u-1/2-lap-and-up u-1/2-desk'
 		return (
 			<div>
-				<ul>
+				<ul className="layout">
 					<li>
-						<label>Redis Service</label>
-						<input type="text" name="spring.cloud.deployer.cloudfoundry.defaults.services" onChange={this.handleChange} />
+						<label className={labelLayout}>Redis Service</label>
+						<input className={inputLayout} type="text" name="spring.cloud.deployer.cloudfoundry.defaults.services" onChange={this.handleChange} />
 					</li>
 					<li>
-						<label>Account Name</label>
-						<input type="text" name="cf.account.name" onChange={this.handleChange} />
+						<label className={labelLayout}>Account Name</label>
+						<input className={inputLayout} type="text" name="cf.account.name" onChange={this.handleChange} />
 					</li>
 					<li>
-						<label>Account Password</label>
-						<input type="password" name="cf.account.password" onChange={this.handleChange} />
+						<label className={labelLayout}>Account Password</label>
+						<input className={inputLayout} type="password" name="cf.account.password" onChange={this.handleChange} />
 					</li>
 					<li>
-						<label>Repository Name/Access Code</label>
-						<input type="text" name="cf.repo.username" onChange={this.handleChange} />
+						<label className={labelLayout}>Repository Name/Access Code</label>
+						<input className={inputLayout} type="text" name="cf.repo.username" onChange={this.handleChange} />
 					</li>
 					<li>
-						<label>Repository Password/Secret Code</label>
-						<input type="text" name="cf.repo.password" onChange={this.handleChange} />
+						<label className={labelLayout}>Repository Password/Secret Code</label>
+						<input className={inputLayout} type="text" name="cf.repo.password" onChange={this.handleChange} />
 					</li>
 					<li>
-						<label>Spring Config Location</label>
-						<input type="text" name="spring.config.location" onChange={this.handleChange} />
+						<label className={labelLayout}>Spring Config Location</label>
+						<input className={inputLayout} type="text" name="spring.config.location" onChange={this.handleChange} />
 					</li>
 				</ul>
 			</div>
