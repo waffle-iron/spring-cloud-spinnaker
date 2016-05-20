@@ -147,7 +147,7 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
 .content__container {
   margin: 0;
   position: relative;
-  height: 1000px;
+  height: 1000px; // TODO: Replace this by styling first all white, then laying a header panel above it
   background: $gray-10;
 }
 
