@@ -17,6 +17,9 @@ class Application extends React.Component {
 			repoUsername: 'cf.repo.username',
 			repoPassword: 'cf.repo.password',
 			springConfigLocation: 'spring.config.location',
+			domain: 'deck.domain',
+			primaryAccount: 'deck.primaryAccount',
+			primaryAccounts: 'deck.primaryAccounts',
 			active: 'settings'
 		}
 		this.updateSetting = this.updateSetting.bind(this)

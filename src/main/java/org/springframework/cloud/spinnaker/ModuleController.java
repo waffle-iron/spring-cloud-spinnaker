@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.jar.Attributes;
@@ -84,6 +86,10 @@ public class ModuleController {
 	private final SpinnakerConfiguration spinnakerConfiguration;
 
 	private final ApplicationContext ctx;
+
+	public static final String DEFAULT_DOMAIN = "cfapps.io"; // PWS
+
+	public static final String DEFAULT_PRIMARY_ACCOUNT = "prod";
 
 
 	@Autowired
@@ -215,10 +221,15 @@ public class ModuleController {
 		newDeckJarFile.putNextEntry(newEntry);
 		if (!entry.isDirectory()) {
 			String settingsJs = StreamUtils.copyToString(zipFile.getInputStream(entry), Charset.defaultCharset());
-			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("domain", "white.springapps.io"));
-			settingsJs = settingsJs.replace("{primaryAccount}", data.getOrDefault("primaryAccount", "prod"));
-			String defaultPrimaryAccounts = StringUtils.collectionToCommaDelimitedString(Stream.of("prod", "staging", "dev").map(account -> "'" + account + "'").collect(Collectors.toList()));
-			settingsJs = settingsJs.replace("'{primaryAccounts}'", "[" + data.getOrDefault("primaryAccounts", defaultPrimaryAccounts) + "]");
+			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("deck.domain", DEFAULT_DOMAIN));
+			settingsJs = settingsJs.replace("{primaryAccount}", data.getOrDefault("deck.primaryAccount", DEFAULT_PRIMARY_ACCOUNT));
+			final String primaryAccounts = data.getOrDefault("deck.primaryAccounts", DEFAULT_PRIMARY_ACCOUNT);
+			final String[] primaryAccountsArray = primaryAccounts.split(",");
+			final List<String> accounts = Arrays.stream(primaryAccountsArray)
+					.map(account -> "'" + account + "'")
+					.collect(Collectors.toList());
+			final String formattedAccounts = StringUtils.collectionToCommaDelimitedString(accounts);
+			settingsJs = settingsJs.replace("'{primaryAccounts}'", "[" + formattedAccounts + "]");
 			StreamUtils.copy(settingsJs, Charset.defaultCharset(), newDeckJarFile);
 		}
 		newDeckJarFile.closeEntry();

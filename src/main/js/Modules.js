@@ -58,8 +58,14 @@ class Modules extends React.Component {
 			data[this.props.settings.repoPassword] = this.props.settings[this.props.settings.repoPassword]
 		}
 
-		if (moduleDetails.deploymentId !== 'deck') {
+		if (moduleDetails.deploymentId !== 'deck') { // If NOT deck...
 			data[this.props.settings.springConfigLocation] = this.props.settings[this.props.settings.springConfigLocation]
+		}
+
+		if (moduleDetails.deploymentId === 'deck') {
+			data[this.props.settings.domain] = this.props.settings[this.props.settings.domain]
+			data[this.props.settings.primaryAccount] = this.props.settings[this.props.settings.primaryAccount]
+			data[this.props.settings.primaryAccounts] = this.props.settings[this.props.settings.primaryAccounts]
 		}
 
 		client({

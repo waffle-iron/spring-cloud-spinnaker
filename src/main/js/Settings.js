@@ -43,8 +43,20 @@ class Settings extends React.Component {
 						<input className={inputLayout} type="text" name="cf.repo.password" onChange={this.handleChange} />
 					</li>
 					<li className={lineItemLayout}>
-						<label className={labelLayout}>Spring Config Location</label>
+						<label className={labelLayout}>Spring Config Location override</label>
 						<input className={inputLayout} type="text" name="spring.config.location" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>Domain</label>
+						<input className={inputLayout} type="text" name="deck.domain" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>Primary Account Name</label>
+						<input className={inputLayout} type="text" name="deck.primaryAccount" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>All Account Names (separated by commas, e.g. prod,staging,dev)</label>
+						<input className={inputLayout} type="text" name="deck.primaryAccounts" onChange={this.handleChange} />
 					</li>
 				</ul>
 			</div>

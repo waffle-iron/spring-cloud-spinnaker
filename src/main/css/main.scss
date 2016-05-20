@@ -160,6 +160,7 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
 .content.active {
   opacity: 1;
   background: $gray-10;
+  z-index: 1;
 }
 
 .site-footer {
@@ -173,7 +174,7 @@ $inuit-base-spacing-unit--tiny: round($inuit-base-spacing-unit / 8);
 }
 
 .control-group {
-  padding: 8.5px;
+  padding: 6px;
 }
 
 // Fine tune the bar at the top, so it shrinks vertically on portable devices
