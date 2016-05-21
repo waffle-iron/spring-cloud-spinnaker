@@ -40,6 +40,7 @@ import java.util.zip.ZipFile;
 
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
+import org.cloudfoundry.util.tuple.Consumer4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +150,7 @@ public class ModuleController {
 			details.getProperties().entrySet().stream()
 		).collect(Collectors.toMap(
 			Map.Entry::getKey,
-			e -> translateTemplatedValue(details, e),
+			e -> translateTemplatedValue(details, e, data),
 			(a, b) -> b));
 
 		data.entrySet().stream()
@@ -167,11 +168,13 @@ public class ModuleController {
 
 		log.debug("Uploading " + artifactToDeploy + "...");
 
-		appDeployer.deploy(new AppDeploymentRequest(
-			new AppDefinition(module, Collections.emptyMap()),
-			artifactToDeploy,
-			properties
-		));
+		if (false) {
+			appDeployer.deploy(new AppDeploymentRequest(
+					new AppDefinition(module, Collections.emptyMap()),
+					artifactToDeploy,
+					properties
+			));
+		}
 
 		return ResponseEntity.created(linkTo(methodOn(ModuleController.class).status(module)).toUri()).build();
 	}
@@ -192,9 +195,10 @@ public class ModuleController {
 						if (entry.getName().contains("META-INF") || entry.getName().contains("MANIFEST.MF")) {
 							// Skip the manifest since it's set up above.
 						} else if (entry.getName().equals("settings.js")) {
-							transformSettingsJs(data, zipFile, newDeckJarFile, entry);
+							consumeZipEntry(zipFile, newDeckJarFile, entry, data, modifySettingsJs);
 						} else {
-							passThroughFileEntry(zipFile, newDeckJarFile, entry);
+							consumeZipEntry(zipFile, newDeckJarFile, entry, data, passthrough);
+
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -215,12 +219,20 @@ public class ModuleController {
 		}
 	}
 
-	private static void transformSettingsJs(Map<String, String> data, ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
+	private static void consumeZipEntry(ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry, Map<String, String> data,
+										Consumer4<ZipFile, JarOutputStream, ZipEntry, Map<String, String>> processor) throws IOException {
 		JarEntry newEntry = new JarEntry(entry.getName());
 		newEntry.setTime(entry.getTime());
 		newDeckJarFile.putNextEntry(newEntry);
 		if (!entry.isDirectory()) {
-			String settingsJs = StreamUtils.copyToString(zipFile.getInputStream(entry), Charset.defaultCharset());
+			processor.accept(zipFile, newDeckJarFile, entry, data);
+		}
+		newDeckJarFile.closeEntry();
+	}
+
+	private static final Consumer4<ZipFile, JarOutputStream, ZipEntry, Map<String, String>> modifySettingsJs = (zipFile, jarOutputStream, zipEntry, data) -> {
+		try {
+			String settingsJs = StreamUtils.copyToString(zipFile.getInputStream(zipEntry), Charset.defaultCharset());
 			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("deck.domain", DEFAULT_DOMAIN));
 			settingsJs = settingsJs.replace("{primaryAccount}", data.getOrDefault("deck.primaryAccount", DEFAULT_PRIMARY_ACCOUNT));
 			final String primaryAccounts = data.getOrDefault("deck.primaryAccounts", DEFAULT_PRIMARY_ACCOUNT);
@@ -230,20 +242,19 @@ public class ModuleController {
 					.collect(Collectors.toList());
 			final String formattedAccounts = StringUtils.collectionToCommaDelimitedString(accounts);
 			settingsJs = settingsJs.replace("'{primaryAccounts}'", "[" + formattedAccounts + "]");
-			StreamUtils.copy(settingsJs, Charset.defaultCharset(), newDeckJarFile);
+			StreamUtils.copy(settingsJs, Charset.defaultCharset(), jarOutputStream);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		newDeckJarFile.closeEntry();
-	}
+	};
 
-	private static void passThroughFileEntry(ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
-		JarEntry newEntry = new JarEntry(entry.getName());
-		newEntry.setTime(entry.getTime());
-		newDeckJarFile.putNextEntry(newEntry);
-		if (!entry.isDirectory()) {
-			StreamUtils.copy(zipFile.getInputStream(entry), newDeckJarFile);
+	private static final Consumer4<ZipFile, JarOutputStream, ZipEntry, Map<String, String>> passthrough = (zipFile, jarOutputStream, zipEntry, data) -> {
+		try {
+			StreamUtils.copy(zipFile.getInputStream(zipEntry), jarOutputStream);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		newDeckJarFile.closeEntry();
-	}
+	};
 
 	private static CloudFoundryDeployerProperties cloneDeployerProperties(CloudFoundryDeployerProperties properties) {
 		CloudFoundryDeployerProperties localProps = new CloudFoundryDeployerProperties();
@@ -257,8 +268,19 @@ public class ModuleController {
 		return clonedProps;
 	}
 
-	private String translateTemplatedValue(ModuleDetails details, Map.Entry<String, String> e) {
-		return concat(spinnakerConfiguration.getPatterns().entrySet().stream(), details.getPatterns().entrySet().stream())
+	private String translateTemplatedValue(ModuleDetails details, Map.Entry<String, String> e, Map<String, String> data) {
+		final Map<String, String> patterns = concat(spinnakerConfiguration.getPatterns().entrySet().stream(), details.getPatterns().entrySet().stream())
+			.collect(Collectors.toMap(
+				entry -> entry.getKey(),
+				entry -> data.keySet().stream()
+					.filter(key -> entry.getValue().contains("{" + key + "}"))
+					.findFirst()
+					.map(key -> entry.getValue().replace("{" + key + "}", data.get(key)))
+					.orElse(entry.getValue()),
+				(a, b) -> b
+			));
+
+		return patterns.entrySet().stream()
 			.reduce(e, (accumEntry, patternEntry) -> {
 				String newValue = accumEntry.getValue().replace("{" + patternEntry.getKey() + "}", patternEntry.getValue());
 				accumEntry.setValue(newValue);

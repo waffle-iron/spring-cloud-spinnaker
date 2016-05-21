@@ -33,9 +33,12 @@ spinnaker:
     spring.config.location: https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker-local.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}-local.yml
     redis.configuration.secure: true
     services.default.protocol: http
+    services.echo.host: echo.{domain}
+    services.echo.port: 80
   patterns:
     org: gregturn
     label: white
+    domain: {deck.domain}
 
 security:
   user:
