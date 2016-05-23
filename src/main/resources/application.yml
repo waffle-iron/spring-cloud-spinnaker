@@ -5,8 +5,6 @@ spinnaker:
       properties:
         cf.account.name: gturnquist
         cf.account.password: supersecret
-        cf.repo.username: AKIAJ43FGRZSUPOS7LEQ
-        cf.repo.password: X4EHCkL6HDKaQKBE6H6Nb3RRB6MsP5IWYW+mR5/G
 #      patterns:
 #        foo: bar
       services:
