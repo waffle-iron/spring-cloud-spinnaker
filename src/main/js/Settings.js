@@ -40,7 +40,7 @@ class Settings extends React.Component {
 					</li>
 					<li className={lineItemLayout}>
 						<label className={labelLayout}>Repository Password/Secret Code</label>
-						<input className={inputLayout} type="text" name="cf.repo.password" onChange={this.handleChange} />
+						<input className={inputLayout} type="password" name="cf.repo.password" onChange={this.handleChange} />
 					</li>
 					<li className={lineItemLayout}>
 						<label className={labelLayout}>Spring Config Location override</label>
