@@ -15,22 +15,16 @@
  */
 package org.springframework.cloud.spinnaker;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryDeployerProperties;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * @author Greg Turnquist
  */
-@Configuration
-@EnableConfigurationProperties({CloudFoundryDeployerProperties.class, SpinnakerConfiguration.class})
-public class Config {
+public interface CloudFoundryAppDeployerFactoryBean extends FactoryBean<CloudFoundryAppDeployer> {
 
-	@Bean
-	ModuleService moduleService(SpinnakerConfiguration spinnakerConfiguration, CloudFoundryAppDeployerFactoryBean appDeployerFactoryBean, ApplicationContext ctx) {
-		return new ModuleService(spinnakerConfiguration, appDeployerFactoryBean, ctx);
-	}
+	CloudFoundryAppDeployer getObject(CloudFoundryDeployerProperties props);
 
+	CloudFoundryDeployerProperties getCloudFoundryDeployerProperties();
 }
