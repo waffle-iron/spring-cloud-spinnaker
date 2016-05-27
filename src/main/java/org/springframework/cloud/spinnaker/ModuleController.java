@@ -22,8 +22,6 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +34,7 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
@@ -137,8 +135,8 @@ public class ModuleController {
 
 		ModuleDetails details = getModuleDetails(module);
 
-		final org.springframework.core.io.Resource[] resources = ctx.getResources(
-			"file:" + details.getName() + "/**/build/libs/" + details.getArtifact() + "-*.jar");
+		final String locationPattern = "classpath*:**/" + details.getArtifact() + "/**/" + details.getArtifact() + "-*.jar";
+		final org.springframework.core.io.Resource[] resources = ctx.getResources(locationPattern);
 
 		Assert.state(resources.length == 1, "Number of resources MUST be 1");
 
@@ -183,31 +181,32 @@ public class ModuleController {
 			final ByteArrayOutputStream jarByteStream = new ByteArrayOutputStream();
 
 			try (
-				ZipFile zipFile = new ZipFile(originalDeckJarFile.getFile());
+				ZipInputStream inputJarStream = new ZipInputStream(originalDeckJarFile.getInputStream());
 				JarOutputStream newDeckJarFile = new JarOutputStream(jarByteStream, manifest)
 			) {
-				zipFile.stream().forEach(entry -> {
+				ZipEntry entry;
+				while ((entry = inputJarStream.getNextEntry()) != null) {
 					try {
 
 						if (entry.getName().contains("META-INF") || entry.getName().contains("MANIFEST.MF")) {
 							// Skip the manifest since it's set up above.
 						} else if (entry.getName().equals("settings.js")) {
-							transformSettingsJs(data, zipFile, newDeckJarFile, entry);
+							transformSettingsJs(data, inputJarStream, newDeckJarFile, entry);
 						} else {
-							passThroughFileEntry(zipFile, newDeckJarFile, entry);
+							passThroughFileEntry(inputJarStream, newDeckJarFile, entry);
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
-				});
+				};
 			}
 
-			if (log.isDebugEnabled()) {
-				Path file = Files.createTempFile("deck-preview", ".jar");
-				log.info("Dumping JAR contents to " + file);
-				Files.write(file, jarByteStream.toByteArray());
-				file.toFile().deleteOnExit();
-			}
+//			if (log.isDebugEnabled()) {
+//				Path file = Files.createTempFile("deck-preview", ".jar");
+//				log.info("Dumping JAR contents to " + file);
+//				Files.write(file, jarByteStream.toByteArray());
+//				file.toFile().deleteOnExit();
+//			}
 
 			return new InMemoryResource(jarByteStream.toByteArray(), "In memory JAR file for deck");
 		} catch (IOException e) {
@@ -215,12 +214,12 @@ public class ModuleController {
 		}
 	}
 
-	private static void transformSettingsJs(Map<String, String> data, ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
+	private static void transformSettingsJs(Map<String, String> data, ZipInputStream zipInputStream, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
 		JarEntry newEntry = new JarEntry(entry.getName());
 		newEntry.setTime(entry.getTime());
 		newDeckJarFile.putNextEntry(newEntry);
 		if (!entry.isDirectory()) {
-			String settingsJs = StreamUtils.copyToString(zipFile.getInputStream(entry), Charset.defaultCharset());
+			String settingsJs = StreamUtils.copyToString(zipInputStream, Charset.defaultCharset());;
 			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("deck.domain", DEFAULT_DOMAIN));
 			settingsJs = settingsJs.replace("{primaryAccount}", data.getOrDefault("deck.primaryAccount", DEFAULT_PRIMARY_ACCOUNT));
 			final String primaryAccounts = data.getOrDefault("deck.primaryAccounts", DEFAULT_PRIMARY_ACCOUNT);
@@ -235,12 +234,12 @@ public class ModuleController {
 		newDeckJarFile.closeEntry();
 	}
 
-	private static void passThroughFileEntry(ZipFile zipFile, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
+	private static void passThroughFileEntry(ZipInputStream zipInputStream, JarOutputStream newDeckJarFile, ZipEntry entry) throws IOException {
 		JarEntry newEntry = new JarEntry(entry.getName());
 		newEntry.setTime(entry.getTime());
 		newDeckJarFile.putNextEntry(newEntry);
 		if (!entry.isDirectory()) {
-			StreamUtils.copy(zipFile.getInputStream(entry), newDeckJarFile);
+			StreamUtils.copy(zipInputStream, newDeckJarFile);
 		}
 		newDeckJarFile.closeEntry();
 	}
