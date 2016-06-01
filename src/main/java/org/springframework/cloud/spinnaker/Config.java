@@ -25,12 +25,17 @@ import org.springframework.context.annotation.Configuration;
  * @author Greg Turnquist
  */
 @Configuration
-@EnableConfigurationProperties({CloudFoundryDeployerProperties.class, SpinnakerConfiguration.class})
+@EnableConfigurationProperties({SpinnakerConfiguration.class})
 public class Config {
 
 	@Bean
-	ModuleService moduleService(SpinnakerConfiguration spinnakerConfiguration, CloudFoundryAppDeployerFactoryBean appDeployerFactoryBean, ApplicationContext ctx) {
+	ModuleService moduleService(SpinnakerConfiguration spinnakerConfiguration, CloudFoundryAppDeployerFactory appDeployerFactoryBean, ApplicationContext ctx) {
 		return new ModuleService(spinnakerConfiguration, appDeployerFactoryBean, ctx);
+	}
+
+	@Bean
+	CloudFoundryAppDeployerFactory cloudFoundryAppDeployerFactoryBean() {
+		return new DefaultAppDeployerFactory();
 	}
 
 }

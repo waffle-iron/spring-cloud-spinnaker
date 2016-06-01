@@ -3,6 +3,7 @@
 const React = require('react')
 const ReactDOM = require('react-dom')
 
+const SpinnakerSettings = require('./SpinnakerSettings')
 const Settings = require('./Settings')
 const Modules = require('./Modules')
 
@@ -11,6 +12,11 @@ class Application extends React.Component {
 	constructor(props) {
 		super(props)
 		this.state = {
+			api: 'spinnaker.api',
+			org: 'spinnaker.org',
+			space: 'spinnaker.space',
+			email: 'spinnaker.email',
+			password: 'spinnaker.password',
 			services: 'spring.cloud.deployer.cloudfoundry.defaults.services',
 			accountName: 'cf.account.name',
 			accountPassword: 'cf.account.password',
@@ -74,6 +80,8 @@ class Application extends React.Component {
 
 				<section className="box box--tiny content__container">
 					<div id="settings" className={this.settingsStatus('settings')}>
+						<h1>Installation Settings</h1>
+						<SpinnakerSettings updateSetting={this.updateSetting} refresh={this.refresh} />
 						<h1>Spinnaker Settings</h1>
 						<Settings updateSetting={this.updateSetting} />
 					</div>

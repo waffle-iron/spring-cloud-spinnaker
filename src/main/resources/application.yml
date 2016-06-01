@@ -7,35 +7,79 @@ spinnaker:
         cf.account.password: supersecret
 #      patterns:
 #        foo: bar
-      services:
-        - spinnaker-redis
+#      services:
+#        - spinnaker-redis
     - name: deck
       artifact: deck-ui
       properties:
         buildpack: staticfile_buildpack
     - name: echo
       artifact: echo-web
+      properties:
+        front50.baseUrl: ${services.front50.baseUrl}
+        orca.baseUrl: ${services.orca.baseUrl}
     - name: front50
       artifact: front50-web
-      services:
-        - spinnaker-redis
+#      services:
+#        - spinnaker-redis
     - name: gate
       artifact: gate-web
-      services:
-        - spinnaker-redis
+#      services:
+#        - spinnaker-redis
     - name: igor
       artifact: igor-web
     - name: orca
       artifact: orca-web
-      services:
-        - spinnaker-redis
+      properties:
+        bakery.baseUrl: ${services.default.protocol}://localhost:8087
+        echo.enabled: ${services.echo.enabled}
+        echo.baseUrl: ${services.echo.baseUrl}
+        front50.baseUrl: ${services.front50.baseUrl}
+        tide.baseUrl: ${services.front50.baseUrl}
+        oort.baseUrl: ${services.clouddriver.baseUrl}
+        mort.baseUrl: ${services.clouddriver.baseUrl}
+        kato.baseUrl: ${services.clouddriver.baseUrl}
+#      services:
+#        - spinnaker-redis
   properties:
-    spring.config.location: https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker-local.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}-local.yml
+    providers.cf.enabled: true
+    providers.cf.primaryCredentials.name: ${accountName}
+    services.slack.enabled: true
+    services.slack.token: foo
+#    spring.config.location: https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/spinnaker-local.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}.yml,https://raw.githubusercontent.com/{org}/spinnaker-config/{label}/{module}-local.yml
     redis.configuration.secure: true
+    redis.connection: ${cloud.services.redis.connection.scheme}://username:${cloud.services.redis.connection.password}@${cloud.services.redis.connection.host}:${cloud.services.redis.connection.port}
     services.default.protocol: http
+    services.clouddriver.host: clouddriver
+    services.clouddriver.port: 80
+    services.clouddriver.baseUrl: ${services.default.protocol}://${services.clouddriver.host}${namespace}.${deck.domain}:${services.clouddriver.port}
+    services.echo.enabled: true
+    services.echo.host: echo
+    services.echo.port: 80
+    services.echo.baseUrl: ${services.default.protocol}://${services.echo.host}${namespace}.${deck.domain}:${services.echo.port}
+    services.front50.host: front50
+    services.front50.port: 80
+    services.front50.baseUrl: ${services.default.protocol}://${services.front50.host}${namespace}.${deck.domain}:${services.front50.port}
+    services.gate.host: gate
+    services.gate.port: 80
+    services.gate.baseUrl: ${services.default.protocol}://${services.gate.host}${namespace}.${deck.domain}:${services.gate.port}
+    services.igor.enabled: true
+    services.igor.host: igor
+    services.igor.port: 80
+    services.igor.baseUrl: ${services.default.protocol}://${services.igor.host}${namespace}.${deck.domain}:${services.igor.port}
+    services.orca.host: orca
+    services.orca.port: 80
+    services.orca.baseUrl: ${services.default.protocol}://${services.orca.host}${namespace}.${deck.domain}:${services.orca.port}
+    services.default.primaryAccountName: ${accountName}
+    spinnaker.baseUrl: ${services.default.protocol}://deck${namespace}.${deck.domain}
+    cassandra.enabled: ${spinnaker.cassandra.enabled}
+    spinnaker.cassandra.enabled: false
+    spinnaker.cassandra.embedded: ${spinnaker.cassandra.enabled}
+    spinnaker.redis.enabled: true
+    spinnaker.inMemory.enabled: true
   patterns:
-    org: gregturn
-    label: white
+    domain: ${deck.domain}
+    accountName: ${deck.primaryAccount}
 
 security:
   user:

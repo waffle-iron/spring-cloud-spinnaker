@@ -15,16 +15,28 @@
  */
 package org.springframework.cloud.spinnaker;
 
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryDeployerProperties;
 
 /**
  * @author Greg Turnquist
  */
-public interface CloudFoundryAppDeployerFactoryBean extends FactoryBean<CloudFoundryAppDeployer> {
+public class TestAppDeployerFactory implements CloudFoundryAppDeployerFactory {
 
-	CloudFoundryAppDeployer getObject(CloudFoundryDeployerProperties props);
+	private CloudFoundryAppDeployer stub;
 
-	CloudFoundryDeployerProperties getCloudFoundryDeployerProperties();
+	public TestAppDeployerFactory(CloudFoundryAppDeployer stub) {
+		this.stub = stub;
+	}
+
+	@Override
+	public CloudFoundryAppDeployer getObject(String api, String org, String space, String email, String password, String namespace) {
+		return this.stub;
+	}
+
+	@Override
+	public CloudFoundryAppDeployer getObject(CloudFoundryDeployerProperties props, String api, String org, String space, String email, String password, String namespace) {
+		return this.stub;
+	}
+
 }

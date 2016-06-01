@@ -20,6 +20,7 @@ import static java.util.stream.Stream.concat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -67,23 +68,15 @@ public class ModuleService {
 
 	private final SpinnakerConfiguration spinnakerConfiguration;
 
-	private final CloudFoundryAppDeployerFactoryBean appDeployerFactoryBean;
+	private final CloudFoundryAppDeployerFactory appDeployerFactory;
 
 	private final ApplicationContext ctx;
 
-	private final CloudFoundryAppDeployer appDeployer;
-
-	public ModuleService(SpinnakerConfiguration spinnakerConfiguration, CloudFoundryAppDeployerFactoryBean appDeployerFactoryBean, ApplicationContext ctx) {
+	public ModuleService(SpinnakerConfiguration spinnakerConfiguration, CloudFoundryAppDeployerFactory appDeployerFactory, ApplicationContext ctx) {
 
 		this.spinnakerConfiguration = spinnakerConfiguration;
-		this.appDeployerFactoryBean = appDeployerFactoryBean;
+		this.appDeployerFactory = appDeployerFactory;
 		this.ctx = ctx;
-
-		try {
-			this.appDeployer = appDeployerFactoryBean.getObject();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	/**
@@ -91,11 +84,11 @@ public class ModuleService {
 	 *
 	 * @return a {@link Stream} of {@link AppStatus}'s
 	 */
-	public Stream<AppStatus> getStatuses() {
+	public Stream<AppStatus> getStatuses(String api, String org, String space, String email, String password, String namespace) {
 
 		return spinnakerConfiguration.getModules().stream()
 			.map(ModuleDetails::getName)
-			.map(appDeployer::status);
+			.map(name -> appDeployerFactory.getObject(api, org, space, email, password, namespace).status(name + namespace));
 	}
 
 	/**
@@ -104,11 +97,11 @@ public class ModuleService {
 	 * @param name
 	 * @return the {@link AppStatus} of the module
 	 */
-	public AppStatus getStatus(String name) {
+	public AppStatus getStatus(String name, String api, String org, String space, String email, String password, String namespace) {
 
 		return lookupModule(name)
 			.map(details -> details.getName())
-			.map(appDeployer::status)
+			.map(moduleName -> appDeployerFactory.getObject(api, org, space, email, password, namespace).status(moduleName + namespace))
 			.orElseThrow(handleNonExistentModule(name));
 	}
 
@@ -119,7 +112,7 @@ public class ModuleService {
 	 * @param data
 	 * @throws IOException
 	 */
-	public void deploy(String module, Map<String, String> data) throws IOException {
+	public void deploy(String module, Map<String, String> data, String api, String org, String space, String email, String password, String namespace) throws IOException {
 
 		ModuleDetails details = getModuleDetails(module);
 
@@ -128,8 +121,8 @@ public class ModuleService {
 
 		log.debug("Uploading " + artifactToDeploy + "...");
 
-		getCloudFoundryAppDeployer(details).deploy(new AppDeploymentRequest(
-				new AppDefinition(module, Collections.emptyMap()),
+		getCloudFoundryAppDeployer(details, api, org, space, email, password, namespace).deploy(new AppDeploymentRequest(
+				new AppDefinition(details.getName() + namespace, Collections.emptyMap()),
 				artifactToDeploy,
 				properties
 		));
@@ -140,8 +133,8 @@ public class ModuleService {
 	 *
 	 * @param name
 	 */
-	public void undeploy(String name) {
-		this.appDeployer.undeploy(name);
+	public void undeploy(String name, String api, String org, String space, String email, String password, String namespace) {
+		appDeployerFactory.getObject(api, org, space, email, password, namespace).undeploy(name);
 	}
 
 	/**
@@ -153,7 +146,7 @@ public class ModuleService {
 	private Optional<ModuleDetails> lookupModule(String name) {
 
 		return spinnakerConfiguration.getModules().stream()
-			.filter(details -> details.getName().equals(name))
+			.filter(details -> name.startsWith(details.getName()))
 			.findAny();
 	}
 
@@ -199,13 +192,13 @@ public class ModuleService {
 	 * @param details
 	 * @return
 	 */
-	private CloudFoundryAppDeployer getCloudFoundryAppDeployer(ModuleDetails details) {
+	private CloudFoundryAppDeployer getCloudFoundryAppDeployer(ModuleDetails details, String api, String org, String space, String email, String password, String namespace) {
 
 		return Optional.ofNullable(details.getProperties().get("buildpack"))
 			// TODO: Remove this step when Spring Cloud Deployer allows overriding the buildpack
-			.map(buildpack -> mutateBuildpack(appDeployerFactoryBean.getCloudFoundryDeployerProperties(), buildpack))
-			.map(props -> appDeployerFactoryBean.getObject(props))
-			.orElse(this.appDeployer);
+			.map(buildpack -> mutateBuildpack(new CloudFoundryDeployerProperties(), buildpack))
+			.map(props -> appDeployerFactory.getObject(props, api, org, space, email, password, namespace))
+			.orElse(appDeployerFactory.getObject(api, org, space, email, password, namespace));
 	}
 
 	/**
@@ -254,7 +247,7 @@ public class ModuleService {
 				details.getProperties().entrySet().stream()
 		).collect(Collectors.toMap(
 				Map.Entry::getKey,
-				e -> translateTemplatedValue(spinnakerConfiguration, details, e),
+				e -> translateTemplatedValue(spinnakerConfiguration, details, e, data),
 				(a, b) -> b));
 
 		data.entrySet().stream()
@@ -263,15 +256,32 @@ public class ModuleService {
 		return properties;
 	}
 
-	private static String translateTemplatedValue(SpinnakerConfiguration spinnakerConfiguration, ModuleDetails details, Map.Entry<String, String> e) {
-		return concat(spinnakerConfiguration.getPatterns().entrySet().stream(), details.getPatterns().entrySet().stream())
-				.reduce(e, (accumEntry, patternEntry) -> {
-					String newValue = accumEntry.getValue().replace("{" + patternEntry.getKey() + "}", patternEntry.getValue());
+	private static String translateTemplatedValue(SpinnakerConfiguration spinnakerConfiguration, ModuleDetails details, Map.Entry<String, String> e, Map<String, String> data) {
+		return preprocessPatterns(spinnakerConfiguration, details, data)
+				.reduce(new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue()), (accumEntry, patternEntry) -> {
+					String newValue = accumEntry.getValue().replace("${" + patternEntry.getKey() + "}", patternEntry.getValue());
 					accumEntry.setValue(newValue);
 					return accumEntry;
 				})
 				.getValue()
-				.replace("{module}", details.getName());
+				.replace("${module}", details.getName());
+	}
+
+	private static Stream<Map.Entry<String, String>> preprocessPatterns(SpinnakerConfiguration spinnakerConfiguration, ModuleDetails details, Map<String, String> data) {
+		return
+			concat(spinnakerConfiguration.getPatterns().entrySet().stream(), details.getPatterns().entrySet().stream())
+				.map(patternEntry -> {
+					String value = data.entrySet().stream()
+							.reduce(new AbstractMap.SimpleEntry<>(patternEntry.getKey(), patternEntry.getValue()), (accumEntry, dataEntry) -> {
+								String newValue = accumEntry.getValue().replace("${" + dataEntry.getKey() + "}", dataEntry.getValue());
+								accumEntry.setValue(newValue);
+								return accumEntry;
+							})
+							.getValue();
+					return new AbstractMap.SimpleEntry<>(patternEntry.getKey(), value);
+				});
+
+
 	}
 
 	private org.springframework.core.io.Resource pluginSettingsJs(org.springframework.core.io.Resource originalDeckJarFile, Map<String, String> data) {
@@ -321,7 +331,7 @@ public class ModuleService {
 		newDeckJarFile.putNextEntry(newEntry);
 		if (!entry.isDirectory()) {
 			String settingsJs = StreamUtils.copyToString(zipInputStream, Charset.defaultCharset());;
-			settingsJs = settingsJs.replace("{gate}", "https://gate." + data.getOrDefault("deck.domain", DEFAULT_DOMAIN));
+			settingsJs = settingsJs.replace("{gate}", "https://gate" + data.getOrDefault("namespace", "") + "." + data.getOrDefault("deck.domain", DEFAULT_DOMAIN));
 			settingsJs = settingsJs.replace("{primaryAccount}", data.getOrDefault("deck.primaryAccount", DEFAULT_PRIMARY_ACCOUNT));
 			final String primaryAccounts = data.getOrDefault("deck.primaryAccounts", DEFAULT_PRIMARY_ACCOUNT);
 			final String[] primaryAccountsArray = primaryAccounts.split(",");

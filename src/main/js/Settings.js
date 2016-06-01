@@ -27,6 +27,22 @@ class Settings extends React.Component {
 						<input className={inputLayout} type="text" name="spring.cloud.deployer.cloudfoundry.defaults.services" onChange={this.handleChange} />
 					</li>
 					<li className={lineItemLayout}>
+						<label className={labelLayout}>Default Org</label>
+						<input className={inputLayout} type="text" name="providers.cf.defaultOrg" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>Default Space</label>
+						<input className={inputLayout} type="text" name="providers.cf.defaultSpace" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>Primary Account API</label>
+						<input className={inputLayout} type="text" name="providers.cf.primaryCredentials.api" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>Primary Account Console</label>
+						<input className={inputLayout} type="text" name="providers.cf.primaryCredentials.console" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
 						<label className={labelLayout}>Account Name</label>
 						<input className={inputLayout} type="text" name="cf.account.name" onChange={this.handleChange} />
 					</li>
@@ -57,6 +73,10 @@ class Settings extends React.Component {
 					<li className={lineItemLayout}>
 						<label className={labelLayout}>All Account Names (separated by commas, e.g. prod,staging,dev)</label>
 						<input className={inputLayout} type="text" name="deck.primaryAccounts" onChange={this.handleChange} />
+					</li>
+					<li className={lineItemLayout}>
+						<label className={labelLayout}>Namespace</label>
+						<input className={inputLayout} type="text" name="all.namespace" onChange={this.handleChange} />
 					</li>
 				</ul>
 			</div>

@@ -25,6 +25,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class ModuleServiceTests {
 				.build());
 
 		// when
-		AppStatus status = moduleService.getStatus("clouddriver");
+		AppStatus status = moduleService.getStatus("clouddriver", "api", "org", "space", "user", "password", "foo");
 
 		// then
 		assertThat(status.getState(), equalTo(DeploymentState.deployed));
@@ -107,7 +108,7 @@ public class ModuleServiceTests {
 		thrown.expectMessage(containsString("Module 'nothing' is not managed by this system"));
 
 		// when
-		moduleService.getStatus("nothing");
+		moduleService.getStatus("nothing", "api", "org", "space", "user", "password", "foo");
 
 		// then
 		// JUnit exception conditions are at the top
@@ -125,7 +126,31 @@ public class ModuleServiceTests {
 		data.put("foo", "bar");
 
 		// when
-		moduleService.deploy("clouddriver", data);
+		moduleService.deploy("clouddriver", data, "api", "org", "space", "user", "password", "foo");
+
+		// then
+		then(appDeployer).should().deploy(new AppDeploymentRequest(
+				new AppDefinition("clouddriver", Collections.emptyMap()),
+				artifactToUpload,
+				any()
+		));
+		verifyNoMoreInteractions(appDeployer);
+	}
+
+	@Test
+	public void shouldHandlePrefixOverrides() throws IOException {
+
+		// given
+		given(appDeployer.deploy(any())).willReturn("clouddriver");
+
+		Resource artifactToUpload = mock(Resource.class);
+
+		Map<String, String> data = new HashMap<>();
+		data.put("deck.domain", "white.springapps.io");
+		data.put("deck.primaryAccount", "prod");
+
+		// when
+		moduleService.deploy("clouddriver", data, "api", "org", "space", "user", "password", "foo");
 
 		// then
 		then(appDeployer).should().deploy(new AppDeploymentRequest(
@@ -140,7 +165,7 @@ public class ModuleServiceTests {
 	public void shouldHandleUndeployingAnApp() {
 
 		// when
-		moduleService.undeploy("clouddriver");
+		moduleService.undeploy("clouddriver", "api", "org", "space", "user", "password", "foo");
 
 		// then
 		then(appDeployer).should().undeploy("clouddriver");
@@ -157,13 +182,13 @@ public class ModuleServiceTests {
 		}
 
 		@Bean
-		CloudFoundryAppDeployerFactoryBean cloudFoundryAppDeployerFactoryBean(CloudFoundryAppDeployer stub) {
-			return new TestAppDeployerFactoryBean(stub);
+		CloudFoundryAppDeployerFactory cloudFoundryAppDeployerFactoryBean(CloudFoundryAppDeployer stub) {
+			return new TestAppDeployerFactory(stub);
 		}
 
 		@Bean
 		ModuleService moduleService(SpinnakerConfiguration spinnakerConfiguration,
-									CloudFoundryAppDeployerFactoryBean appDeployerFactoryBean,
+									CloudFoundryAppDeployerFactory appDeployerFactoryBean,
 									ApplicationContext ctx) {
 			return new ModuleService(spinnakerConfiguration, appDeployerFactoryBean, ctx);
 		}

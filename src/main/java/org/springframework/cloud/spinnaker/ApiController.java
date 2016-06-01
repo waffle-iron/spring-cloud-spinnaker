@@ -22,6 +22,7 @@ import org.springframework.hateoas.ResourceSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -31,12 +32,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiController {
 
 	@RequestMapping(method = RequestMethod.GET, value = ModuleController.BASE_PATH, produces = MediaTypes.HAL_JSON_VALUE)
-	public ResponseEntity<?> root() {
+	public ResponseEntity<?> root(@RequestParam("api") String api,
+								  @RequestParam("org") String org,
+								  @RequestParam("space") String space,
+								  @RequestParam("email") String email,
+								  @RequestParam("password") String password,
+								  @RequestParam(value = "namespace", defaultValue = "") String namespace) {
 
 		ResourceSupport root = new ResourceSupport();
 
-		root.add(linkTo(methodOn(ApiController.class).root()).withSelfRel());
-		root.add(linkTo(methodOn(ModuleController.class).statuses()).withRel("modules"));
+		root.add(linkTo(methodOn(ApiController.class).root(api, org, space, email, password, namespace)).withSelfRel());
+		root.add(linkTo(methodOn(ModuleController.class).statuses(api, org, space, email, password, namespace)).withRel("modules"));
 
 		return ResponseEntity.ok(root);
 	}

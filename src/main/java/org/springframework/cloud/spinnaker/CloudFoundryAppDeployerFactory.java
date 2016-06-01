@@ -15,44 +15,16 @@
  */
 package org.springframework.cloud.spinnaker;
 
-import org.springframework.cloud.deployer.spi.app.AppDeployer;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryAppDeployer;
 import org.springframework.cloud.deployer.spi.cloudfoundry.CloudFoundryDeployerProperties;
 
 /**
  * @author Greg Turnquist
  */
-public class TestAppDeployerFactoryBean implements CloudFoundryAppDeployerFactoryBean {
+public interface CloudFoundryAppDeployerFactory {
 
-	private CloudFoundryAppDeployer stub;
+	CloudFoundryAppDeployer getObject(String api, String org, String space, String email, String password, String namespace);
 
-	public TestAppDeployerFactoryBean(CloudFoundryAppDeployer stub) {
-		this.stub = stub;
-	}
-
-	@Override
-	public CloudFoundryAppDeployer getObject() throws Exception {
-		return this.stub;
-	}
-
-	@Override
-	public CloudFoundryAppDeployer getObject(CloudFoundryDeployerProperties props) {
-		return this.stub;
-	}
-
-	@Override
-	public Class<?> getObjectType() {
-		return AppDeployer.class;
-	}
-
-	@Override
-	public boolean isSingleton() {
-		return true;
-	}
-
-	@Override
-	public CloudFoundryDeployerProperties getCloudFoundryDeployerProperties() {
-		return new CloudFoundryDeployerProperties();
-	}
+	CloudFoundryAppDeployer getObject(CloudFoundryDeployerProperties props, String api, String org, String space, String email, String password, String namespace);
 
 }
