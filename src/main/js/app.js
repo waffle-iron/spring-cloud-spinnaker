@@ -69,11 +69,11 @@ class Application extends React.Component {
 			<div>
 				<section className="page-header box box--tiny">
 					<ul className="tabs">
-						<li className={this.tabStatus('settings')}>
-							<a id="settings-link" className="tabs__link" onClick={this.handleSettings}>Settings</a>
+						<li className={this.tabStatus('settings')} onClick={this.handleSettings}>
+							<a id="settings-link" className="tabs__link">Settings</a>
 						</li>
-						<li className={this.tabStatus('status')}>
-							<a id="status-link" className="tabs__link" onClick={this.handleStatus}>Status</a>
+						<li className={this.tabStatus('status')} onClick={this.handleStatus}>
+							<a id="status-link" className="tabs__link">Status</a>
 						</li>
 					</ul>
 				</section>
