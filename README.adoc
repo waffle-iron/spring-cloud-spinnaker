@@ -25,36 +25,11 @@ Before you can run this application, you have to build Spinnaker's modules.
 WARNING: Do NOT interrupt `build_spinnaker.sh` in mid process. Due to the nature of Spinnaker's nebula gradle plugin, the
 components cannot be built inside a git submodule. The script temporarily moves each module into /tmp, builds it, then
 moves it back. Any interruptions would require reseting the state of your cloned repository.
++
+1. Run `./mvnw clean package`
+1. `cf push spinnaker-deployer -p target/spring-cloud-spinnaker-<version>.jar
 
-=== Targeting your deployment environment
-
-This app uses the Spring Cloud Deployer for Cloud Foundry library. To support it, you need to create a key file:
-
-.`src/main/resources/application-dev.yml`
-[source]
-----
-spring:
-  cloud:
-    deployer:
-      cloudfoundry:
-        username: <your username>
-        password: <your password>
-        organization: <your CF org>
-        space: <your CF space>
-        apiEndpoint: <your API endpoint>
-        domain: <default domain of your CF org>
-        skipSslValidation: true
-----
-
-NOTE: Don't worry! `application-dev.yml` is listed as a file to NOT put under source control inside `.gitignore`.
-
-With `src/main/resources/application-dev.yml` in place, you are now ready to run Spring Cloud Spinnaker.
-
-----
-SPRING_PROFILES_ACTIVE=dev ./mvnw clean spring-boot:run
-----
-
-Visit localhost:8080 and login using the credentials specified in application.yml.
+Now you can point your browser at the deployment site of the Spinnaker Deployer, fill outs its settings, and install Spinnaker anywhere!
 
 == Deploying Spinnaker
 
@@ -70,8 +45,35 @@ Requirements:
 |===
 | Setting | Purpose
 
+| Target API
+| URL for the API where Spinnaker will be installed
+
+| Target Organization
+| Name of the org Spinnaker will be installed into
+
+| Target Space
+| Name of the space Spinnaker will be installed into
+
+| Target Email
+| Email for logging into CF to install Spinnaker
+
+| Target Password
+| Password for logging into CF to install Spinnaker
+
 | Redis Service
 | Name of the Redis service you created
+
+| Default Org
+| Primary org where Spinnaker will make deployments
+
+| Default Space
+| Primary space where Spinnaker will make deployments
+
+| Primary Account API
+| URL for the API where Spinnaker will make deployments
+
+| Primary Account Console
+| URL for App Manager
 
 | Account Name
 | Account name for Spinnaker to use when logging into PCF
@@ -91,6 +93,18 @@ NOTE: If your repository isn't secured, leave blank
 
 | Spring Config Location
 | Override path location of your own set of Spinnaker configuration files.
+
+| Domain
+| Domain that Spinnaker will be installed into
+
+| Primary Account Name
+| Name of the account linked to the primary space
+
+| All Account Names
+| List of account names Spinnaker will interact with (separated by commas)
+
+| Namespace
+| Optional suffix to apply to Spinnaker module names (*gturnquist* will yield *clouddriver-gturnquist*, etc.)
 |===
 
 With your settings filled in, click on the Status tab.

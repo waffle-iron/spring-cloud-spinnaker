@@ -59,7 +59,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ModuleServiceTests {
 
 	@Autowired
-	CloudFoundryAppDeployer appDeployer;
+	TestAppDeployerFactory appDeployerFactory;
 
 	@Autowired
 	ModuleService moduleService;
@@ -70,6 +70,9 @@ public class ModuleServiceTests {
 	public void shouldReturnStatusCodeForRunningModules() throws Exception {
 
 		// given
+		CloudFoundryAppDeployer appDeployer = mock(CloudFoundryAppDeployer.class);
+		appDeployerFactory.setStub(appDeployer);
+
 		given(appDeployer.status("clouddriver")).willReturn(
 			AppStatus
 				.of("clouddriver")
@@ -86,7 +89,7 @@ public class ModuleServiceTests {
 				.build());
 
 		// when
-		AppStatus status = moduleService.getStatus("clouddriver", "api", "org", "space", "user", "password", "foo");
+		AppStatus status = moduleService.getStatus("clouddriver", "api", "org", "space", "user", "password", "");
 
 		// then
 		assertThat(status.getState(), equalTo(DeploymentState.deployed));
@@ -99,6 +102,9 @@ public class ModuleServiceTests {
 	public void shouldReturnErrorForNonexistentModule() throws Exception {
 
 		// given
+		CloudFoundryAppDeployer appDeployer = mock(CloudFoundryAppDeployer.class);
+		appDeployerFactory.setStub(appDeployer);
+
 		given(appDeployer.status("nothing")).willReturn(
 			AppStatus
 				.of("nothing")
@@ -108,7 +114,7 @@ public class ModuleServiceTests {
 		thrown.expectMessage(containsString("Module 'nothing' is not managed by this system"));
 
 		// when
-		moduleService.getStatus("nothing", "api", "org", "space", "user", "password", "foo");
+		moduleService.getStatus("nothing", "api", "org", "space", "user", "password", "");
 
 		// then
 		// JUnit exception conditions are at the top
@@ -118,6 +124,9 @@ public class ModuleServiceTests {
 	public void shouldHandleStandardDeployment() throws Exception {
 
 		// given
+		CloudFoundryAppDeployer appDeployer = mock(CloudFoundryAppDeployer.class);
+		appDeployerFactory.setStub(appDeployer);
+
 		given(appDeployer.deploy(any())).willReturn("clouddriver");
 
 		Resource artifactToUpload = mock(Resource.class);
@@ -126,7 +135,7 @@ public class ModuleServiceTests {
 		data.put("foo", "bar");
 
 		// when
-		moduleService.deploy("clouddriver", data, "api", "org", "space", "user", "password", "foo");
+		moduleService.deploy("clouddriver", data, "api", "org", "space", "user", "password", "");
 
 		// then
 		then(appDeployer).should().deploy(new AppDeploymentRequest(
@@ -141,6 +150,9 @@ public class ModuleServiceTests {
 	public void shouldHandlePrefixOverrides() throws IOException {
 
 		// given
+		CloudFoundryAppDeployer appDeployer = mock(CloudFoundryAppDeployer.class);
+		appDeployerFactory.setStub(appDeployer);
+
 		given(appDeployer.deploy(any())).willReturn("clouddriver");
 
 		Resource artifactToUpload = mock(Resource.class);
@@ -150,7 +162,7 @@ public class ModuleServiceTests {
 		data.put("deck.primaryAccount", "prod");
 
 		// when
-		moduleService.deploy("clouddriver", data, "api", "org", "space", "user", "password", "foo");
+		moduleService.deploy("clouddriver", data, "api", "org", "space", "user", "password", "");
 
 		// then
 		then(appDeployer).should().deploy(new AppDeploymentRequest(
@@ -164,8 +176,12 @@ public class ModuleServiceTests {
 	@Test
 	public void shouldHandleUndeployingAnApp() {
 
+		// given
+		CloudFoundryAppDeployer appDeployer = mock(CloudFoundryAppDeployer.class);
+		appDeployerFactory.setStub(appDeployer);
+
 		// when
-		moduleService.undeploy("clouddriver", "api", "org", "space", "user", "password", "foo");
+		moduleService.undeploy("clouddriver", "api", "org", "space", "user", "password", "");
 
 		// then
 		then(appDeployer).should().undeploy("clouddriver");
@@ -177,13 +193,8 @@ public class ModuleServiceTests {
 	static class TestConfig {
 
 		@Bean
-		CloudFoundryAppDeployer appDeployer() {
-			return mock(CloudFoundryAppDeployer.class);
-		}
-
-		@Bean
-		CloudFoundryAppDeployerFactory cloudFoundryAppDeployerFactoryBean(CloudFoundryAppDeployer stub) {
-			return new TestAppDeployerFactory(stub);
+		TestAppDeployerFactory cloudFoundryAppDeployerFactoryBean() {
+			return new TestAppDeployerFactory();
 		}
 
 		@Bean

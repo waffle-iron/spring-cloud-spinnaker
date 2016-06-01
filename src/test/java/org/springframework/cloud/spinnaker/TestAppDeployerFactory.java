@@ -25,7 +25,7 @@ public class TestAppDeployerFactory implements CloudFoundryAppDeployerFactory {
 
 	private CloudFoundryAppDeployer stub;
 
-	public TestAppDeployerFactory(CloudFoundryAppDeployer stub) {
+	public TestAppDeployerFactory() {
 		this.stub = stub;
 	}
 
@@ -37,6 +37,14 @@ public class TestAppDeployerFactory implements CloudFoundryAppDeployerFactory {
 	@Override
 	public CloudFoundryAppDeployer getObject(CloudFoundryDeployerProperties props, String api, String org, String space, String email, String password, String namespace) {
 		return this.stub;
+	}
+
+	public CloudFoundryAppDeployer getStub() {
+		return stub;
+	}
+
+	public void setStub(CloudFoundryAppDeployer stub) {
+		this.stub = stub;
 	}
 
 }

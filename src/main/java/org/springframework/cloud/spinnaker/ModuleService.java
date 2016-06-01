@@ -134,7 +134,8 @@ public class ModuleService {
 	 * @param name
 	 */
 	public void undeploy(String name, String api, String org, String space, String email, String password, String namespace) {
-		appDeployerFactory.getObject(api, org, space, email, password, namespace).undeploy(name);
+		final CloudFoundryAppDeployer appDeployer = appDeployerFactory.getObject(api, org, space, email, password, namespace);
+		appDeployer.undeploy(name);
 	}
 
 	/**
