@@ -27,7 +27,7 @@ components cannot be built inside a git submodule. The script temporarily moves 
 moves it back. Any interruptions would require reseting the state of your cloned repository.
 +
 1. Run `./mvnw clean package`
-1. `cf push spinnaker-deployer -p target/spring-cloud-spinnaker-<version>.jar
+1. `cf push spinnaker-deployer -p target/spring-cloud-spinnaker-<version>.jar`
 
 Now you can point your browser at the deployment site of the Spinnaker Deployer, fill outs its settings, and install Spinnaker anywhere!
 
